@@ -3,6 +3,7 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import type { AppConfig } from '../config.js';
 import { Logger } from '../core/logger.js';
+import { ResearchService } from '../research/research-service.js';
 import { ScholarError } from '../scholar/errors.js';
 import { ScholarService } from '../scholar/scholar-service.js';
 import type { ScholarPaperResult } from '../scholar/types.js';
@@ -57,7 +58,12 @@ const toToolError = (error: unknown): CallToolResult => {
   };
 };
 
-export const createScholarMcpServer = (config: AppConfig, service: ScholarService, logger: Logger): McpServer => {
+export const createScholarMcpServer = (
+  config: AppConfig,
+  service: ScholarService,
+  researchService: ResearchService,
+  logger: Logger
+): McpServer => {
   const server = new McpServer(
     {
       name: config.serverName,
@@ -68,6 +74,70 @@ export const createScholarMcpServer = (config: AppConfig, service: ScholarServic
     {
       capabilities: {
         logging: {}
+      }
+    }
+  );
+
+  server.registerTool(
+    'search_literature_graph',
+    {
+      title: 'Search Federated Literature Graph',
+      description:
+        'Search multiple scholarly metadata providers (OpenAlex, Crossref, Semantic Scholar, optional Scholar scrape) and return canonicalized paper records.',
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true
+      },
+      inputSchema: {
+        query: z.string().min(1).describe('Research query string.'),
+        year_range: z
+          .union([
+            z.tuple([z.number().int(), z.number().int()]),
+            z.object({ start: z.number().int(), end: z.number().int() })
+          ])
+          .optional()
+          .describe('Optional publication year range as [start, end] or {start, end}.'),
+        fields_of_study: z.array(z.string().min(1)).optional().describe('Optional field-of-study filters.'),
+        limit: z.number().int().min(1).max(50).default(10).describe('Maximum number of merged results.'),
+        sources: z
+          .array(z.enum(['openalex', 'crossref', 'semantic_scholar', 'scholar_scrape']))
+          .optional()
+          .describe('Optional source allow-list.')
+      }
+    },
+    async (args): Promise<CallToolResult> => {
+      try {
+        const normalizedYearRange = (() => {
+          if (!args.year_range) {
+            return undefined;
+          }
+
+          if (Array.isArray(args.year_range)) {
+            return args.year_range;
+          }
+
+          return [args.year_range.start, args.year_range.end] as [number, number];
+        })();
+
+        const result = await researchService.searchLiteratureGraph({
+          query: args.query,
+          yearRange: normalizedYearRange,
+          fieldsOfStudy: args.fields_of_study,
+          limit: args.limit,
+          sources: args.sources
+        });
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          structuredContent: result as unknown as Record<string, unknown>
+        };
+      } catch (error) {
+        logger.warn('Federated literature search failed', {
+          tool: 'search_literature_graph',
+          query: args.query,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return toToolError(error);
       }
     }
   );

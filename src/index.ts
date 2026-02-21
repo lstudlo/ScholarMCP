@@ -2,6 +2,7 @@ import { parseConfig, type TransportMode } from './config.js';
 import { Logger } from './core/logger.js';
 import { startHttpServer } from './http/start-http-server.js';
 import { startStdioServer } from './mcp/start-stdio-server.js';
+import { ResearchService } from './research/research-service.js';
 import { ScholarService } from './scholar/scholar-service.js';
 
 const argTransport = process.argv
@@ -19,20 +20,21 @@ const config = parseConfig(
 
 const logger = new Logger(config.logLevel);
 const scholarService = ScholarService.fromConfig(config, logger);
+const researchService = ResearchService.fromConfig(config, logger, scholarService);
 
 const run = async (): Promise<void> => {
   switch (config.transport) {
     case 'stdio': {
-      await startStdioServer(config, scholarService, logger);
+      await startStdioServer(config, scholarService, researchService, logger);
       break;
     }
     case 'http': {
-      startHttpServer(config, scholarService, logger);
+      startHttpServer(config, scholarService, researchService, logger);
       break;
     }
     case 'both': {
-      startHttpServer(config, scholarService, logger);
-      await startStdioServer(config, scholarService, logger);
+      startHttpServer(config, scholarService, researchService, logger);
+      await startStdioServer(config, scholarService, researchService, logger);
       break;
     }
     default: {
