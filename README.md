@@ -1,263 +1,86 @@
-# ScholarMCP (Node.js + Hono)
+# ScholarMCP
 
-A lightweight Google Scholar MCP server built with Node.js, Hono, and the official TypeScript MCP SDK.
+ScholarMCP is an MCP server for literature research workflows in coding agents.
 
-This implementation ports the core ideas from the Python reference (`others-scolar-mcp`) and exposes them as production-ready MCP tools with:
+It gives your agent tools to:
+- search papers across multiple sources
+- ingest and parse full-text PDFs
+- extract structured paper details
+- suggest citations and build references
+- validate manuscript citations
 
-- `stdio` transport for local MCP clients (including OpenAI Codex app)
-- Streamable HTTP endpoint via Hono (`/mcp`) for remote/networked clients
-- Federated literature search, full-text ingestion, granular extraction, and citation workflows
+## Who this is for
 
-## Features
+Use this if you want Claude Code, Codex, or any MCP-compatible coding agent to run research tasks directly from chat.
 
-- MCP-compliant tools:
-  - `search_literature_graph`
-  - `ingest_paper_fulltext`
-  - `get_ingestion_status`
-  - `extract_granular_paper_details`
-  - `suggest_contextual_citations`
-  - `build_reference_list`
-  - `validate_manuscript_citations`
-  - `search_google_scholar_key_words`
-  - `search_google_scholar_advanced`
-  - `get_author_info`
-- Hono-based HTTP runtime with security guards (host/origin validation and optional bearer auth)
-- Stateful or stateless Streamable HTTP MCP sessions with automatic TTL/capacity cleanup
-- Resilient Google Scholar fetcher (timeouts, retries, request pacing)
-- Federated metadata retrieval from OpenAlex, Crossref, and Semantic Scholar
-- Federated search optimizations: bounded TTL cache, provider fanout, fuzzy dedupe, and multi-signal ranking
-- Full-text ingestion jobs with parser fallback order: GROBID -> Python sidecar -> local PDF parser
-- Citation generation with CSL-style bibliography output and BibTeX export
-- Thesis-oriented citation diagnostics (completeness, duplicate detection, style-aware warnings)
-- Structured outputs suitable for research automation flows
-- Compatibility-oriented output shape inspired by the original Python server
+## What you get
 
-## Architecture
-
-- `src/config.ts`:
-  - Environment parsing and runtime configuration
-- `src/scholar/*`:
-  - Google Scholar HTTP client, parsers, and service logic
-- `src/research/*`:
-  - Federated metadata clients, ingestion pipeline, extraction and citation services
-- `src/mcp/*`:
-  - MCP server/tool registration and stdio transport boot
-- `src/http/*`:
-  - Hono app and Streamable HTTP MCP endpoint
-- `src/index.ts`:
-  - Runtime entrypoint with transport mode selection
+- Transports: `stdio` (recommended) and HTTP (`/mcp`)
+- Research providers: Google Scholar, OpenAlex, Crossref, Semantic Scholar
+- Full-text parsing pipeline: `grobid -> sidecar -> simple`
+- Tooling for thesis/paper workflows: ingestion, extraction, references, validation
 
 ## Quick Start
 
-### 1. Install dependencies
+### 1. Prerequisites
+
+- Node.js `>=20`
+- `pnpm`
+
+### 2. Install
 
 ```bash
 pnpm install
 ```
 
-### 2. Run in stdio mode (default, for MCP clients)
+### 3. Run locally (manual)
+
+Stdio mode:
 
 ```bash
 pnpm dev:stdio
 ```
 
-### 3. Run in HTTP mode (Hono)
+HTTP mode:
 
 ```bash
 pnpm dev:http
 ```
 
-Health endpoint:
+Health check (HTTP mode):
 
 ```bash
 curl http://127.0.0.1:3000/health
 ```
 
-### 4. Build for production
+## Use with Coding Agents
+
+### Claude Code (recommended)
+
+From the project directory, register this server as project-scoped MCP:
 
 ```bash
-pnpm build
-pnpm start
+claude mcp add -s project \
+  -e SCHOLAR_MCP_TRANSPORT=stdio \
+  -e SCHOLAR_REQUEST_DELAY_MS=350 \
+  -e RESEARCH_ALLOW_REMOTE_PDFS=true \
+  -e RESEARCH_ALLOW_LOCAL_PDFS=true \
+  -- scholar_mcp pnpm --dir /absolute/path/to/ScolarMCP exec tsx src/index.ts --transport=stdio
 ```
 
-## Configuration
-
-Key environment variables:
-
-- `SCHOLAR_MCP_TRANSPORT`: `stdio` | `http` | `both` (default: `stdio`)
-- `SCHOLAR_MCP_HOST`: HTTP bind host (default: `127.0.0.1`)
-- `SCHOLAR_MCP_PORT`: HTTP port (default: `3000`)
-- `SCHOLAR_MCP_ENDPOINT_PATH`: MCP endpoint path (default: `/mcp`)
-- `SCHOLAR_MCP_HTTP_SESSION_MODE`: `stateful` | `stateless` (default: `stateful`)
-- `SCHOLAR_MCP_HTTP_SESSION_TTL_MS`: Max idle lifetime for HTTP MCP sessions
-- `SCHOLAR_MCP_HTTP_MAX_SESSIONS`: Maximum concurrent HTTP MCP sessions before LRU eviction
-- `SCHOLAR_MCP_ALLOWED_ORIGINS`: CSV allowlist for Origin header checks
-- `SCHOLAR_MCP_ALLOWED_HOSTS`: CSV allowlist for Host header checks
-- `SCHOLAR_MCP_API_KEY`: Optional bearer token required for `/mcp`
-- `SCHOLAR_LANGUAGE`: Scholar language (default: `en`)
-- `SCHOLAR_TIMEOUT_MS`: Request timeout (default: `15000`)
-- `SCHOLAR_RETRY_ATTEMPTS`: Retries (default: `2`)
-- `SCHOLAR_REQUEST_DELAY_MS`: Delay between requests in ms (default: `250`)
-- `RESEARCH_OPENALEX_BASE_URL`: OpenAlex API base URL
-- `RESEARCH_OPENALEX_API_KEY`: Optional OpenAlex API key
-- `RESEARCH_CROSSREF_BASE_URL`: Crossref API base URL
-- `RESEARCH_SEMANTIC_SCHOLAR_BASE_URL`: Semantic Scholar Graph API base URL
-- `RESEARCH_SEMANTIC_SCHOLAR_API_KEY`: Optional Semantic Scholar API key
-- `RESEARCH_TIMEOUT_MS`: Federated provider timeout
-- `RESEARCH_RETRY_ATTEMPTS`: Federated provider retries
-- `RESEARCH_REQUEST_DELAY_MS`: Inter-request pacing for provider calls
-- `RESEARCH_ALLOW_REMOTE_PDFS`: Toggle remote PDF ingestion
-- `RESEARCH_ALLOW_LOCAL_PDFS`: Toggle local PDF ingestion
-- `RESEARCH_GROBID_URL`: Optional GROBID service root URL (for example `http://127.0.0.1:8070`)
-- `RESEARCH_PYTHON_SIDECAR_URL`: Optional Python sidecar URL (for example `http://127.0.0.1:8090`)
-- `RESEARCH_SEMANTIC_ENGINE`: `cloud-llm` | `none`
-- `RESEARCH_CLOUD_MODEL`: Cloud model label for metadata/tracing
-- `RESEARCH_GRAPH_CACHE_TTL_MS`: In-memory cache TTL for federated graph searches (`0` disables cache)
-- `RESEARCH_GRAPH_MAX_CACHE_ENTRIES`: Maximum cached graph queries
-- `RESEARCH_GRAPH_PROVIDER_RESULT_MULTIPLIER`: Per-provider fanout multiplier for recall
-- `RESEARCH_GRAPH_FUZZY_TITLE_THRESHOLD`: Similarity threshold used for fuzzy merge across providers
-
-Example:
+Check status:
 
 ```bash
-SCHOLAR_MCP_TRANSPORT=http \
-SCHOLAR_MCP_PORT=8787 \
-SCHOLAR_MCP_API_KEY=change-me \
-pnpm exec tsx src/index.ts
+claude mcp get scholar_mcp
 ```
-
-## MCP Tools
-
-### `search_literature_graph`
-
-Inputs:
-
-- `query` (string, required)
-- `year_range` (`[start, end]` or `{start, end}`, optional)
-- `fields_of_study` (string array, optional)
-- `limit` (int, default `10`, max `50`)
-- `sources` (`openalex|crossref|semantic_scholar|scholar_scrape` array, optional)
-
-### `ingest_paper_fulltext`
-
-Inputs:
-
-- One of: `doi` | `paper_url` | `pdf_url` | `local_pdf_path`
-- `parse_mode` (`auto|grobid|sidecar|simple`, default `auto`)
-- `ocr_enabled` (bool, default `true`)
-
-Output:
-
-- Asynchronous job object with `jobId` and `documentId`
-
-### `get_ingestion_status`
-
-Inputs:
-
-- `job_id` (string, required)
-
-### `extract_granular_paper_details`
-
-Inputs:
-
-- `document_id` (string, required)
-- `sections` (string array, optional)
-- `include_references` (bool, default `true`)
-
-### `suggest_contextual_citations`
-
-Inputs:
-
-- `manuscript_text` (string, required)
-- `cursor_context` (string, optional)
-- `style` (`apa|ieee|chicago|vancouver`, default `apa`)
-- `k` (int, default `10`)
-- `recency_bias` (`0..1`, default `0.5`)
-
-### `build_reference_list`
-
-Inputs:
-
-- `style` (`apa|ieee|chicago|vancouver`, default `apa`)
-- `locale` (string, default `en-US`)
-- `manuscript_text` (string, optional)
-- `works` (manual work objects, optional)
-
-Outputs:
-
-- Formatted bibliography
-- CSL-like reference payload
-- BibTeX export
-
-### `validate_manuscript_citations`
-
-Inputs:
-
-- `manuscript_text` (string, required)
-- `style` (`apa|ieee|chicago|vancouver`, optional)
-- `references` (`[{id?, formatted, bibtex?}]`, required)
-
-Output highlights:
-
-- Missing/uncited inline citations
-- Duplicate reference detection
-- Per-reference completeness diagnostics (author/year/title/source + persistent ID)
-- Normalization suggestions (for example DOI canonicalization)
-
-### `search_google_scholar_key_words`
-
-Inputs:
-
-- `query` (string, required)
-- `num_results` (int, default `5`)
-- `start` (int, default `0`)
-- `language` (string, default `en`)
-
-### `search_google_scholar_advanced`
-
-Inputs:
-
-- `query` (string, required)
-- `author` (string, optional)
-- `year_range` (`[start, end]` or `{start, end}`, optional)
-- `exact_phrase` (string, optional)
-- `exclude_words` (string, optional)
-- `title_only` (boolean, default `false`)
-- `num_results` (int, default `5`)
-- `start` (int, default `0`)
-- `language` (string, default `en`)
-
-### `get_author_info`
-
-Inputs:
-
-- `author_name` (string, required)
-- `max_publications` (int, default `5`)
-- `language` (string, default `en`)
 
 Notes:
+- Keep the `--` before `scholar_mcp` (required by current Claude CLI parsing for multiple `-e` entries).
+- If you need to replace config: `claude mcp remove scholar_mcp -s project`.
 
-- If Google Scholar rate-limits profile lookups, the server gracefully falls back to author-scoped paper search results.
+### OpenAI Codex App
 
-## Optional Python Sidecar
-
-For hybrid parsing, run the sidecar in `python-sidecar/`:
-
-```bash
-cd python-sidecar
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app:app --host 127.0.0.1 --port 8090
-```
-
-Then set `RESEARCH_PYTHON_SIDECAR_URL=http://127.0.0.1:8090`.
-
-## OpenAI Codex App Integration
-
-Add an MCP server entry to `~/.codex/config.toml`.
-
-### Option A: Local stdio (recommended)
+Add to `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.scholar_mcp]
@@ -267,34 +90,90 @@ args = ["--dir", "/absolute/path/to/ScolarMCP", "exec", "tsx", "src/index.ts", "
 [mcp_servers.scholar_mcp.env]
 SCHOLAR_MCP_TRANSPORT = "stdio"
 SCHOLAR_REQUEST_DELAY_MS = "350"
+RESEARCH_ALLOW_REMOTE_PDFS = "true"
+RESEARCH_ALLOW_LOCAL_PDFS = "true"
 ```
 
-### Option B: HTTP endpoint
+### Generic MCP clients
 
-Run server:
+- `stdio` command:
+  - `pnpm --dir /absolute/path/to/ScolarMCP exec tsx src/index.ts --transport=stdio`
+- HTTP endpoint:
+  1. Start server with `SCHOLAR_MCP_TRANSPORT=http pnpm exec tsx src/index.ts`
+  2. Connect client to `http://127.0.0.1:3000/mcp`
+  3. Optional auth: set `SCHOLAR_MCP_API_KEY` and send bearer auth header from your client
+
+## MCP Tools
+
+| Tool | Purpose |
+|---|---|
+| `search_literature_graph` | Federated search over OpenAlex/Crossref/Semantic Scholar (+ optional scholar scrape). |
+| `search_google_scholar_key_words` | Keyword search on Google Scholar. |
+| `search_google_scholar_advanced` | Scholar search with author/year/phrase filters. |
+| `get_author_info` | Resolve author profile and top publications. |
+| `ingest_paper_fulltext` | Start async full-text ingestion from DOI/URL/PDF/local path. |
+| `get_ingestion_status` | Poll ingestion job status and parsed summary. |
+| `extract_granular_paper_details` | Extract methods, claims, datasets, metrics, and references. |
+| `suggest_contextual_citations` | Suggest citations from manuscript context. |
+| `build_reference_list` | Generate formatted bibliography and BibTeX. |
+| `validate_manuscript_citations` | Detect missing/uncited/duplicate citation issues. |
+
+## Example Agent Prompts
+
+- "Find 10 recent papers on retrieval-augmented generation and summarize methods and datasets."
+- "Ingest full text for DOI `10.1038/s41467-024-55563-6`, then extract claims and limitations."
+- "Given this draft section, suggest citations in IEEE style and generate BibTeX."
+- "Validate my manuscript citations against this reference list and show missing citations."
+
+## Optional Python Sidecar (better parsing fallback)
+
+Run sidecar:
 
 ```bash
-SCHOLAR_MCP_TRANSPORT=http pnpm exec tsx src/index.ts
+cd python-sidecar
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app:app --host 127.0.0.1 --port 8090
 ```
 
-Then in Codex config:
+Then set:
 
-```toml
-[mcp_servers.scholar_mcp_http]
-url = "http://127.0.0.1:3000/mcp"
+```bash
+RESEARCH_PYTHON_SIDECAR_URL=http://127.0.0.1:8090
 ```
 
-If you enable `SCHOLAR_MCP_API_KEY`, include the auth mechanism your MCP client supports for bearer headers.
+## Configuration
 
-## Verification
+Most users only need these:
 
-Type check and tests:
+- `SCHOLAR_MCP_TRANSPORT`: `stdio` | `http` | `both` (default: `stdio`)
+- `SCHOLAR_REQUEST_DELAY_MS`: request pacing to reduce rate-limit risk (default: `250`)
+- `RESEARCH_ALLOW_REMOTE_PDFS`: allow remote PDF downloads for ingestion (default: `true`)
+- `RESEARCH_ALLOW_LOCAL_PDFS`: allow local PDF ingestion (default: `true`)
+- `SCHOLAR_MCP_API_KEY`: optional bearer token for HTTP mode
+- `RESEARCH_GROBID_URL`: optional GROBID endpoint
+- `RESEARCH_PYTHON_SIDECAR_URL`: optional sidecar endpoint
+
+Advanced options exist in `src/config.ts` for timeouts, retries, HTTP session capacity/TTL, provider tuning, and cache behavior.
+
+## Troubleshooting
+
+- `Invalid environment variable format` in `claude mcp add`:
+  - Add `--` before the MCP server name (see Claude setup command above).
+- `Unable to resolve a downloadable PDF URL from input` on DOI ingestion:
+  - The DOI landing page may not expose a downloadable PDF.
+  - Retry with `pdf_url` (direct PDF) or `local_pdf_path`.
+- Too many Scholar failures or throttling:
+  - Increase `SCHOLAR_REQUEST_DELAY_MS` (for example `500` to `1000`).
+
+## Dev Verification
 
 ```bash
 pnpm check
 pnpm test
 ```
 
-## Legal and Usage Notes
+## Usage Notes
 
-Google Scholar may throttle or challenge automated traffic. Use conservative request pacing, respect usage terms, and avoid abusive query patterns.
+Google Scholar may throttle automated traffic. Use conservative request pacing, respect provider terms, and avoid abusive query patterns.
