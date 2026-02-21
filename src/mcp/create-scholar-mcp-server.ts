@@ -409,6 +409,7 @@ export const createScholarMcpServer = (
       },
       inputSchema: {
         manuscript_text: z.string().min(20),
+        style: z.enum(['apa', 'ieee', 'chicago', 'vancouver']).optional(),
         references: z.array(
           z.object({
             id: z.string().optional(),
@@ -418,7 +419,7 @@ export const createScholarMcpServer = (
         )
       }
     },
-    async ({ manuscript_text, references }): Promise<CallToolResult> => {
+    async ({ manuscript_text, references, style }): Promise<CallToolResult> => {
       try {
         const normalizedReferences = references.map((reference, index) => ({
           id: reference.id ?? `ref-${index + 1}`,
@@ -449,7 +450,9 @@ export const createScholarMcpServer = (
           }
         }));
 
-        const result = researchService.validateManuscriptCitations(manuscript_text, normalizedReferences);
+        const result = researchService.validateManuscriptCitations(manuscript_text, normalizedReferences, {
+          style
+        });
         return {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
           structuredContent: result as unknown as Record<string, unknown>

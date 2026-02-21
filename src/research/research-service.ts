@@ -5,7 +5,7 @@ import { CitationService, type BuildReferenceListInput, type ReferenceListResult
 import { ExtractionService, type GranularExtractionInput } from './extraction-service.js';
 import { LiteratureService, type LiteratureSearchInput, type LiteratureSearchResult } from './literature-service.js';
 import { IngestionService, type IngestPaperInput } from './ingestion-service.js';
-import type { ReferenceEntry } from './types.js';
+import type { CitationStyle, ReferenceEntry } from './types.js';
 
 export class ResearchService {
   private readonly literatureService: LiteratureService;
@@ -61,7 +61,7 @@ export class ResearchService {
     return this.citationService.buildReferenceList(input);
   }
 
-  validateManuscriptCitations(manuscriptText: string, references: ReferenceEntry[]) {
-    return this.citationService.validateManuscriptCitations(manuscriptText, references);
+  validateManuscriptCitations(manuscriptText: string, references: ReferenceEntry[], options?: { style?: CitationStyle }) {
+    return this.citationService.validateManuscriptCitations(manuscriptText, references, options);
   }
 }

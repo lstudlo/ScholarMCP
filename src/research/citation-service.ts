@@ -3,7 +3,7 @@ import '@citation-js/plugin-csl';
 import '@citation-js/plugin-bibtex';
 import '@citation-js/plugin-doi';
 import type { CanonicalWork, CitationCandidate, CitationStyle, ReferenceEntry } from './types.js';
-import { clamp, overlapScore, tokenizeForRanking } from './utils.js';
+import { clamp, normalizeDoi, normalizeWhitespace, overlapScore, tokenizeForRanking } from './utils.js';
 import type { LiteratureService } from './literature-service.js';
 
 export interface SuggestCitationsInput {
@@ -35,12 +35,23 @@ export interface ReferenceListResult {
   bibtex: string;
 }
 
+export interface ReferenceCompletenessDiagnostic {
+  referenceId: string;
+  label: string;
+  missingElements: Array<'author' | 'year' | 'title' | 'source'>;
+  missingPersistentIdentifier: boolean;
+  suggestions: string[];
+}
+
 export interface CitationValidationResult {
   inlineCitationCount: number;
   referenceCount: number;
   missingReferences: string[];
   uncitedReferences: string[];
   styleWarnings: string[];
+  duplicateReferences: string[];
+  completenessDiagnostics: ReferenceCompletenessDiagnostic[];
+  normalizationSuggestions: string[];
 }
 
 const styleTemplateMap: Record<CitationStyle, string> = {
@@ -154,6 +165,196 @@ const buildInlineSuggestion = (style: CitationStyle, works: CanonicalWork[]): st
     .join('; ');
 };
 
+const parseNumericInlineCitations = (manuscriptText: string): { numbers: number[]; invalidChunks: string[] } => {
+  const numbers = new Set<number>();
+  const invalidChunks: string[] = [];
+
+  for (const match of manuscriptText.matchAll(/\[([^\]]+)\]/g)) {
+    const inner = match[1]?.trim() ?? '';
+    if (!inner) {
+      continue;
+    }
+
+    const chunks = inner.split(/[;,]/).map((chunk) => chunk.trim()).filter((chunk) => chunk.length > 0);
+    let parsedChunk = false;
+
+    for (const chunk of chunks) {
+      const single = chunk.match(/^(\d{1,4})$/);
+      if (single?.[1]) {
+        numbers.add(Number.parseInt(single[1], 10));
+        parsedChunk = true;
+        continue;
+      }
+
+      const range = chunk.match(/^(\d{1,4})\s*[-–]\s*(\d{1,4})$/);
+      if (range?.[1] && range[2]) {
+        const start = Number.parseInt(range[1], 10);
+        const end = Number.parseInt(range[2], 10);
+        if (start <= end && end - start <= 100) {
+          for (let value = start; value <= end; value += 1) {
+            numbers.add(value);
+          }
+          parsedChunk = true;
+          continue;
+        }
+      }
+    }
+
+    if (!parsedChunk) {
+      invalidChunks.push(`[${inner}]`);
+    }
+  }
+
+  return {
+    numbers: [...numbers].sort((a, b) => a - b),
+    invalidChunks
+  };
+};
+
+const parseAuthorYearCitations = (manuscriptText: string): Array<{ author: string; raw: string }> => {
+  const citations: Array<{ author: string; raw: string }> = [];
+
+  for (const match of manuscriptText.matchAll(/\(([^()]*?(?:19|20)\d{2}[a-z]?[^()]*)\)/g)) {
+    const raw = match[0] ?? '';
+    const block = match[1] ?? '';
+    const parts = block.split(';').map((value) => normalizeWhitespace(value)).filter((value) => value.length > 0);
+
+    for (const part of parts) {
+      const authorMatch = part.match(/^([A-Z][A-Za-z'`\-]+)(?:\s+et al\.)?(?:\s*&\s+[A-Z][A-Za-z'`\-]+)?\s*,\s*(?:19|20)\d{2}[a-z]?/);
+      if (!authorMatch?.[1]) {
+        continue;
+      }
+
+      citations.push({
+        author: authorMatch[1],
+        raw
+      });
+    }
+  }
+
+  return citations;
+};
+
+const findReferenceYear = (reference: ReferenceEntry): number | null => {
+  if (reference.sourceWork.year) {
+    return reference.sourceWork.year;
+  }
+
+  const match = reference.formatted.match(/(?:19|20)\d{2}/);
+  return match?.[0] ? Number.parseInt(match[0], 10) : null;
+};
+
+const findReferenceTitle = (reference: ReferenceEntry): string | null => {
+  const title = normalizeWhitespace(reference.sourceWork.title ?? '');
+  if (title.length > 0) {
+    return title;
+  }
+
+  const parts = reference.formatted.split('.').map((part) => normalizeWhitespace(part));
+  const candidate = parts.find((part) => part.length > 10 && !/(?:19|20)\d{2}/.test(part));
+  return candidate ?? null;
+};
+
+const findReferenceAuthors = (reference: ReferenceEntry): string[] => {
+  if (reference.sourceWork.authors.length > 0) {
+    return reference.sourceWork.authors.map((author) => author.name).filter((name) => name.length > 0);
+  }
+
+  const authorPrefix = normalizeWhitespace(reference.formatted.split('(')[0] ?? '');
+  if (authorPrefix.length === 0) {
+    return [];
+  }
+
+  return authorPrefix
+    .split(/,|&| and /i)
+    .map((part) => normalizeWhitespace(part))
+    .filter((part) => part.length > 0);
+};
+
+const findReferenceSource = (reference: ReferenceEntry): string | null => {
+  const source = normalizeWhitespace(reference.sourceWork.venue ?? '');
+  if (source.length > 0) {
+    return source;
+  }
+
+  if (reference.sourceWork.url || reference.sourceWork.doi) {
+    return reference.sourceWork.url ?? reference.sourceWork.doi ?? null;
+  }
+
+  return null;
+};
+
+const buildCompletenessDiagnostic = (reference: ReferenceEntry, index: number): ReferenceCompletenessDiagnostic => {
+  const missingElements: Array<'author' | 'year' | 'title' | 'source'> = [];
+  const suggestions: string[] = [];
+
+  const authors = findReferenceAuthors(reference);
+  if (authors.length === 0) {
+    missingElements.push('author');
+  }
+
+  const year = findReferenceYear(reference);
+  if (!year) {
+    missingElements.push('year');
+  }
+
+  const title = findReferenceTitle(reference);
+  if (!title) {
+    missingElements.push('title');
+  }
+
+  const source = findReferenceSource(reference);
+  if (!source) {
+    missingElements.push('source');
+  }
+
+  const doi = normalizeDoi(reference.sourceWork.doi);
+  const hasUrl = Boolean(reference.sourceWork.url);
+  const hasPersistentIdentifier = Boolean(doi || hasUrl);
+
+  if (doi && !reference.formatted.toLowerCase().includes('doi.org/')) {
+    suggestions.push(`Reference ${index + 1}: include DOI as canonical URL (https://doi.org/${doi}).`);
+  }
+
+  if (!hasPersistentIdentifier) {
+    suggestions.push(`Reference ${index + 1}: add DOI or stable URL for traceability.`);
+  }
+
+  return {
+    referenceId: reference.id,
+    label: `[${index + 1}] ${reference.formatted}`,
+    missingElements,
+    missingPersistentIdentifier: !hasPersistentIdentifier,
+    suggestions
+  };
+};
+
+const findDuplicateReferences = (references: ReferenceEntry[]): string[] => {
+  const seen = new Map<string, number>();
+  const duplicates: string[] = [];
+
+  references.forEach((reference, index) => {
+    const doi = normalizeDoi(reference.sourceWork.doi);
+    const title = normalizeWhitespace(reference.sourceWork.title ?? reference.formatted)
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const year = reference.sourceWork.year ?? findReferenceYear(reference) ?? 'na';
+
+    const key = doi ? `doi:${doi}` : `title:${title}:year:${year}`;
+    const previous = seen.get(key);
+    if (previous !== undefined) {
+      duplicates.push(`Reference ${previous + 1} duplicates reference ${index + 1}.`);
+      return;
+    }
+
+    seen.set(key, index);
+  });
+
+  return duplicates;
+};
+
 export class CitationService {
   constructor(private readonly literatureService: LiteratureService) {}
 
@@ -255,28 +456,28 @@ export class CitationService {
     };
   }
 
-  validateManuscriptCitations(manuscriptText: string, references: ReferenceEntry[]): CitationValidationResult {
-    const numericCitations = [...manuscriptText.matchAll(/\[(\d{1,3})\]/g)].map((match) => Number.parseInt(match[1] ?? '', 10));
-    const authorYearCitations = [...manuscriptText.matchAll(/\(([A-Z][A-Za-z\-]+),\s*(19|20)\d{2}[a-z]?\)/g)].map(
-      (match) => ({ author: match[1] ?? '', raw: match[0] ?? '' })
-    );
+  validateManuscriptCitations(
+    manuscriptText: string,
+    references: ReferenceEntry[],
+    options?: { style?: CitationStyle }
+  ): CitationValidationResult {
+    const numericCitationParse = parseNumericInlineCitations(manuscriptText);
+    const numericCitations = numericCitationParse.numbers;
+    const authorYearCitations = parseAuthorYearCitations(manuscriptText);
 
     const placeholders = [...manuscriptText.matchAll(/\[(?:\?|TODO|CITATION)\]/gi)].map((match) => match[0] ?? '');
 
-    const missingReferences: string[] = [];
-    if (numericCitations.length > 0) {
-      const maxCitation = Math.max(...numericCitations);
-      for (let i = 1; i <= maxCitation; i += 1) {
-        if (i > references.length) {
-          missingReferences.push(`[${i}]`);
-        }
+    const missingReferences = new Set<string>();
+    for (const value of numericCitations) {
+      if (value < 1 || value > references.length) {
+        missingReferences.add(`[${value}]`);
       }
     }
 
     for (const citation of authorYearCitations) {
       const matched = references.some((entry) => entry.formatted.toLowerCase().includes(citation.author.toLowerCase()));
       if (!matched) {
-        missingReferences.push(citation.raw);
+        missingReferences.add(citation.raw);
       }
     }
 
@@ -290,17 +491,50 @@ export class CitationService {
       .filter((entry) => !entry.referenced)
       .map((entry) => entry.label);
 
-    const styleWarnings = [...placeholders];
+    const completenessDiagnostics = references.map((reference, index) => buildCompletenessDiagnostic(reference, index));
+    const normalizationSuggestions = [...new Set(completenessDiagnostics.flatMap((item) => item.suggestions))];
+
+    const styleWarnings = [...placeholders, ...numericCitationParse.invalidChunks];
+
     if (references.length === 0) {
       styleWarnings.push('Reference list is empty.');
+    }
+
+    if (numericCitations.length > 0 && authorYearCitations.length > 0) {
+      styleWarnings.push('Mixed numeric and author-year inline citation patterns detected.');
+    }
+
+    const expectedStyle = options?.style;
+    if (expectedStyle === 'ieee' || expectedStyle === 'vancouver') {
+      if (authorYearCitations.length > 0) {
+        styleWarnings.push(`Expected numeric citations for ${expectedStyle.toUpperCase()} style.`);
+      }
+    }
+
+    if (expectedStyle === 'apa' || expectedStyle === 'chicago') {
+      if (numericCitations.length > 0) {
+        styleWarnings.push(`Expected author-year citations for ${expectedStyle.toUpperCase()} style.`);
+      }
+    }
+
+    if (expectedStyle === 'apa') {
+      const referencesMissingDoiUrl = completenessDiagnostics.filter((item) => item.missingPersistentIdentifier).length;
+      if (referencesMissingDoiUrl > 0) {
+        styleWarnings.push(
+          `${referencesMissingDoiUrl} reference(s) are missing a DOI/URL, which weakens APA traceability requirements.`
+        );
+      }
     }
 
     return {
       inlineCitationCount: numericCitations.length + authorYearCitations.length,
       referenceCount: references.length,
-      missingReferences,
+      missingReferences: [...missingReferences],
       uncitedReferences,
-      styleWarnings
+      styleWarnings,
+      duplicateReferences: findDuplicateReferences(references),
+      completenessDiagnostics,
+      normalizationSuggestions
     };
   }
 }

@@ -167,4 +167,79 @@ describe('citation-service', () => {
     expect(result.missingReferences).toHaveLength(0);
     expect(result.uncitedReferences).toHaveLength(0);
   });
+
+  it('detects citation range gaps, duplicates, and completeness issues', () => {
+    const service = new CitationService({
+      searchGraph: async () => ({
+        query: 'x',
+        totalResults: 0,
+        providerErrors: [],
+        results: []
+      })
+    } as never);
+
+    const references: ReferenceEntry[] = [
+      {
+        id: 'ref-1',
+        csl: {},
+        formatted: 'Doe, J. (2023). Sample Work.',
+        bibtex: '@article{doe2023}',
+        sourceWork: {
+          title: 'Sample Work',
+          abstract: null,
+          year: 2023,
+          venue: null,
+          doi: null,
+          url: null,
+          paperId: 'p1',
+          citationCount: 0,
+          influentialCitationCount: 0,
+          referenceCount: 0,
+          authors: [{ name: 'Jane Doe' }],
+          openAccess: { isOpenAccess: false, pdfUrl: null, license: null },
+          externalIds: {},
+          fieldsOfStudy: [],
+          score: 0,
+          provenance: []
+        }
+      },
+      {
+        id: 'ref-2',
+        csl: {},
+        formatted: 'Doe, J. (2023). Sample Work.',
+        bibtex: '@article{doe2023b}',
+        sourceWork: {
+          title: 'Sample Work',
+          abstract: null,
+          year: 2023,
+          venue: null,
+          doi: null,
+          url: null,
+          paperId: 'p2',
+          citationCount: 0,
+          influentialCitationCount: 0,
+          referenceCount: 0,
+          authors: [{ name: 'Jane Doe' }],
+          openAccess: { isOpenAccess: false, pdfUrl: null, license: null },
+          externalIds: {},
+          fieldsOfStudy: [],
+          score: 0,
+          provenance: []
+        }
+      }
+    ];
+
+    const result = service.validateManuscriptCitations(
+      'Recent studies support this claim [1-3]. Additional context is provided by (Doe, 2023). [TODO]',
+      references,
+      { style: 'ieee' }
+    );
+
+    expect(result.inlineCitationCount).toBe(4);
+    expect(result.missingReferences).toContain('[3]');
+    expect(result.duplicateReferences.length).toBeGreaterThan(0);
+    expect(result.completenessDiagnostics.some((item) => item.missingPersistentIdentifier)).toBe(true);
+    expect(result.styleWarnings.some((warning) => warning.includes('Expected numeric citations'))).toBe(true);
+    expect(result.styleWarnings).toContain('[TODO]');
+  });
 });

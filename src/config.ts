@@ -5,6 +5,9 @@ export type TransportMode = 'stdio' | 'http' | 'both';
 const numberFromEnv = (defaultValue: number, min: number, max: number) =>
   z.coerce.number().int().min(min).max(max).default(defaultValue);
 
+const floatFromEnv = (defaultValue: number, min: number, max: number) =>
+  z.coerce.number().min(min).max(max).default(defaultValue);
+
 const booleanFromEnv = (defaultValue: boolean) =>
   z.preprocess((value) => {
     if (typeof value === 'boolean') {
@@ -38,6 +41,9 @@ const envSchema = z.object({
   SCHOLAR_MCP_PORT: numberFromEnv(3000, 1, 65535),
   SCHOLAR_MCP_ENDPOINT_PATH: z.string().default('/mcp'),
   SCHOLAR_MCP_HEALTH_PATH: z.string().default('/health'),
+  SCHOLAR_MCP_HTTP_SESSION_MODE: z.enum(['stateful', 'stateless']).default('stateful'),
+  SCHOLAR_MCP_HTTP_SESSION_TTL_MS: numberFromEnv(30 * 60 * 1000, 10_000, 24 * 60 * 60 * 1000),
+  SCHOLAR_MCP_HTTP_MAX_SESSIONS: numberFromEnv(200, 1, 5000),
   SCHOLAR_MCP_ALLOWED_ORIGINS: z.string().optional(),
   SCHOLAR_MCP_ALLOWED_HOSTS: z.string().optional(),
   SCHOLAR_MCP_API_KEY: z.string().optional(),
@@ -62,7 +68,11 @@ const envSchema = z.object({
   RESEARCH_GROBID_URL: z.string().url().optional(),
   RESEARCH_PYTHON_SIDECAR_URL: z.string().url().optional(),
   RESEARCH_SEMANTIC_ENGINE: z.enum(['cloud-llm', 'none']).default('cloud-llm'),
-  RESEARCH_CLOUD_MODEL: z.string().default('gpt-4.1-mini')
+  RESEARCH_CLOUD_MODEL: z.string().default('gpt-4.1-mini'),
+  RESEARCH_GRAPH_CACHE_TTL_MS: numberFromEnv(5 * 60 * 1000, 0, 24 * 60 * 60 * 1000),
+  RESEARCH_GRAPH_MAX_CACHE_ENTRIES: numberFromEnv(300, 1, 5000),
+  RESEARCH_GRAPH_PROVIDER_RESULT_MULTIPLIER: numberFromEnv(2, 1, 5),
+  RESEARCH_GRAPH_FUZZY_TITLE_THRESHOLD: floatFromEnv(0.84, 0.6, 0.99)
 });
 
 type ParsedEnv = z.infer<typeof envSchema>;
@@ -95,6 +105,9 @@ export interface AppConfig {
   port: number;
   endpointPath: string;
   healthPath: string;
+  httpSessionMode: 'stateful' | 'stateless';
+  httpSessionTtlMs: number;
+  httpMaxSessions: number;
   allowedOrigins: string[];
   allowedHosts: string[];
   apiKey?: string;
@@ -120,6 +133,10 @@ export interface AppConfig {
   researchPythonSidecarUrl?: string;
   researchSemanticEngine: 'cloud-llm' | 'none';
   researchCloudModel: string;
+  researchGraphCacheTtlMs: number;
+  researchGraphMaxCacheEntries: number;
+  researchGraphProviderResultMultiplier: number;
+  researchGraphFuzzyTitleThreshold: number;
 }
 
 export const parseConfig = (overrides?: Partial<Record<keyof ParsedEnv, string | number>>): AppConfig => {
@@ -140,6 +157,9 @@ export const parseConfig = (overrides?: Partial<Record<keyof ParsedEnv, string |
     port: env.SCHOLAR_MCP_PORT,
     endpointPath: normalizePath(env.SCHOLAR_MCP_ENDPOINT_PATH),
     healthPath: normalizePath(env.SCHOLAR_MCP_HEALTH_PATH),
+    httpSessionMode: env.SCHOLAR_MCP_HTTP_SESSION_MODE,
+    httpSessionTtlMs: env.SCHOLAR_MCP_HTTP_SESSION_TTL_MS,
+    httpMaxSessions: env.SCHOLAR_MCP_HTTP_MAX_SESSIONS,
     allowedOrigins: splitCsv(env.SCHOLAR_MCP_ALLOWED_ORIGINS),
     allowedHosts: splitCsv(env.SCHOLAR_MCP_ALLOWED_HOSTS).map((host) => host.toLowerCase()),
     apiKey: env.SCHOLAR_MCP_API_KEY,
@@ -164,6 +184,10 @@ export const parseConfig = (overrides?: Partial<Record<keyof ParsedEnv, string |
     researchGrobidUrl: env.RESEARCH_GROBID_URL,
     researchPythonSidecarUrl: env.RESEARCH_PYTHON_SIDECAR_URL,
     researchSemanticEngine: env.RESEARCH_SEMANTIC_ENGINE,
-    researchCloudModel: env.RESEARCH_CLOUD_MODEL
+    researchCloudModel: env.RESEARCH_CLOUD_MODEL,
+    researchGraphCacheTtlMs: env.RESEARCH_GRAPH_CACHE_TTL_MS,
+    researchGraphMaxCacheEntries: env.RESEARCH_GRAPH_MAX_CACHE_ENTRIES,
+    researchGraphProviderResultMultiplier: env.RESEARCH_GRAPH_PROVIDER_RESULT_MULTIPLIER,
+    researchGraphFuzzyTitleThreshold: env.RESEARCH_GRAPH_FUZZY_TITLE_THRESHOLD
   };
 };

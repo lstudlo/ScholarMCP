@@ -22,10 +22,13 @@ This implementation ports the core ideas from the Python reference (`others-scol
   - `search_google_scholar_advanced`
   - `get_author_info`
 - Hono-based HTTP runtime with security guards (host/origin validation and optional bearer auth)
+- Stateful or stateless Streamable HTTP MCP sessions with automatic TTL/capacity cleanup
 - Resilient Google Scholar fetcher (timeouts, retries, request pacing)
 - Federated metadata retrieval from OpenAlex, Crossref, and Semantic Scholar
+- Federated search optimizations: bounded TTL cache, provider fanout, fuzzy dedupe, and multi-signal ranking
 - Full-text ingestion jobs with parser fallback order: GROBID -> Python sidecar -> local PDF parser
 - Citation generation with CSL-style bibliography output and BibTeX export
+- Thesis-oriented citation diagnostics (completeness, duplicate detection, style-aware warnings)
 - Structured outputs suitable for research automation flows
 - Compatibility-oriented output shape inspired by the original Python server
 
@@ -85,6 +88,9 @@ Key environment variables:
 - `SCHOLAR_MCP_HOST`: HTTP bind host (default: `127.0.0.1`)
 - `SCHOLAR_MCP_PORT`: HTTP port (default: `3000`)
 - `SCHOLAR_MCP_ENDPOINT_PATH`: MCP endpoint path (default: `/mcp`)
+- `SCHOLAR_MCP_HTTP_SESSION_MODE`: `stateful` | `stateless` (default: `stateful`)
+- `SCHOLAR_MCP_HTTP_SESSION_TTL_MS`: Max idle lifetime for HTTP MCP sessions
+- `SCHOLAR_MCP_HTTP_MAX_SESSIONS`: Maximum concurrent HTTP MCP sessions before LRU eviction
 - `SCHOLAR_MCP_ALLOWED_ORIGINS`: CSV allowlist for Origin header checks
 - `SCHOLAR_MCP_ALLOWED_HOSTS`: CSV allowlist for Host header checks
 - `SCHOLAR_MCP_API_KEY`: Optional bearer token required for `/mcp`
@@ -106,6 +112,10 @@ Key environment variables:
 - `RESEARCH_PYTHON_SIDECAR_URL`: Optional Python sidecar URL (for example `http://127.0.0.1:8090`)
 - `RESEARCH_SEMANTIC_ENGINE`: `cloud-llm` | `none`
 - `RESEARCH_CLOUD_MODEL`: Cloud model label for metadata/tracing
+- `RESEARCH_GRAPH_CACHE_TTL_MS`: In-memory cache TTL for federated graph searches (`0` disables cache)
+- `RESEARCH_GRAPH_MAX_CACHE_ENTRIES`: Maximum cached graph queries
+- `RESEARCH_GRAPH_PROVIDER_RESULT_MULTIPLIER`: Per-provider fanout multiplier for recall
+- `RESEARCH_GRAPH_FUZZY_TITLE_THRESHOLD`: Similarity threshold used for fuzzy merge across providers
 
 Example:
 
@@ -184,7 +194,15 @@ Outputs:
 Inputs:
 
 - `manuscript_text` (string, required)
+- `style` (`apa|ieee|chicago|vancouver`, optional)
 - `references` (`[{id?, formatted, bibtex?}]`, required)
+
+Output highlights:
+
+- Missing/uncited inline citations
+- Duplicate reference detection
+- Per-reference completeness diagnostics (author/year/title/source + persistent ID)
+- Normalization suggestions (for example DOI canonicalization)
 
 ### `search_google_scholar_key_words`
 

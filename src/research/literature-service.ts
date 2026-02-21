@@ -2,7 +2,7 @@ import type { AppConfig } from '../config.js';
 import { Logger } from '../core/logger.js';
 import { ScholarService } from '../scholar/scholar-service.js';
 import type { CanonicalWork, ProvenanceRecord } from './types.js';
-import { normalizeDoi, normalizeWhitespace, parseYear } from './utils.js';
+import { normalizeDoi, normalizeWhitespace, parseYear, tokenizeForRanking } from './utils.js';
 import { ResearchHttpClient } from './http-client.js';
 import type { ProviderWork } from './providers/openalex-client.js';
 import { OpenAlexClient } from './providers/openalex-client.js';
@@ -24,12 +24,19 @@ export interface LiteratureSearchResult {
   providerErrors: Array<{ provider: string; message: string }>;
 }
 
+interface CachedSearchResult {
+  expiresAt: number;
+  value: LiteratureSearchResult;
+}
+
 const providerWeight: Record<ProviderWork['provider'], number> = {
   openalex: 1,
   crossref: 0.9,
   semantic_scholar: 1.1,
   scholar_scrape: 0.7
 };
+
+const DEFAULT_SOURCES: LiteratureSearchInput['sources'] = ['openalex', 'crossref', 'semantic_scholar'];
 
 const scoreFromCitations = (citations: number): number => {
   if (citations <= 0) {
@@ -44,14 +51,21 @@ const normalizeTitleKey = (title: string): string =>
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, '');
 
-const buildKey = (work: ProviderWork): string => {
-  if (work.doi) {
-    return `doi:${work.doi}`;
+const tokenSetFromTitle = (title: string): Set<string> => new Set(tokenizeForRanking(title));
+
+const setJaccard = (a: Set<string>, b: Set<string>): number => {
+  if (a.size === 0 || b.size === 0) {
+    return 0;
   }
 
-  const titleKey = normalizeTitleKey(work.title);
-  const year = work.year ?? 0;
-  return `title:${titleKey}:year:${year}`;
+  let overlap = 0;
+  for (const token of a) {
+    if (b.has(token)) {
+      overlap += 1;
+    }
+  }
+
+  return overlap / (a.size + b.size - overlap);
 };
 
 const mergeFields = (current: string[], incoming: string[]): string[] => {
@@ -82,11 +96,44 @@ const matchesFieldOfStudy = (work: ProviderWork, requestedFields?: string[]): bo
   return requestedFields.some((field) => normalized.has(field.trim().toLowerCase()));
 };
 
+const yearsCompatible = (a: number | null, b: number | null): boolean => !a || !b || Math.abs(a - b) <= 2;
+
+const normalizeAuthorName = (name: string): string =>
+  normalizeWhitespace(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '');
+
+const sharesAuthorSignal = (
+  left: Array<{ name: string; authorId?: string | null }>,
+  right: Array<{ name: string; authorId?: string | null }>
+): boolean => {
+  if (left.length === 0 || right.length === 0) {
+    return true;
+  }
+
+  const leftIds = new Set(left.map((author) => author.authorId).filter((id): id is string => Boolean(id)));
+  if (leftIds.size > 0 && right.some((author) => author.authorId && leftIds.has(author.authorId))) {
+    return true;
+  }
+
+  const leftNames = new Set(left.map((author) => normalizeAuthorName(author.name)).filter((name) => name.length > 0));
+  return right.some((author) => leftNames.has(normalizeAuthorName(author.name)));
+};
+
+const cloneResult = <T>(value: T): T => {
+  try {
+    return structuredClone(value);
+  } catch {
+    return JSON.parse(JSON.stringify(value)) as T;
+  }
+};
+
 export class LiteratureService {
   private readonly httpClient: ResearchHttpClient;
   private readonly openAlexClient: OpenAlexClient;
   private readonly crossrefClient: CrossrefClient;
   private readonly semanticScholarClient: SemanticScholarClient;
+  private readonly searchCache = new Map<string, CachedSearchResult>();
 
   constructor(
     private readonly config: AppConfig,
@@ -100,14 +147,29 @@ export class LiteratureService {
   }
 
   async searchGraph(input: LiteratureSearchInput): Promise<LiteratureSearchResult> {
-    const requestedSources = new Set(input.sources ?? ['openalex', 'crossref', 'semantic_scholar']);
+    const requestedSources = new Set(input.sources ?? DEFAULT_SOURCES);
+    const cacheKey = this.createCacheKey(input, requestedSources);
+    const cached = this.getCache(cacheKey);
+    if (cached) {
+      this.logger.debug('Returning literature graph result from cache', {
+        query: input.query,
+        sources: [...requestedSources],
+        limit: input.limit
+      });
+      return cached;
+    }
+
     const providerErrors: Array<{ provider: string; message: string }> = [];
+    const providerLimit = Math.max(
+      input.limit,
+      Math.ceil(input.limit * this.config.researchGraphProviderResultMultiplier)
+    );
 
     const providerPromises: Array<Promise<ProviderWork[]>> = [];
 
     if (requestedSources.has('openalex')) {
       providerPromises.push(
-        this.openAlexClient.searchWorks(input.query, input.limit).catch((error) => {
+        this.openAlexClient.searchWorks(input.query, providerLimit).catch((error) => {
           providerErrors.push({ provider: 'openalex', message: error instanceof Error ? error.message : String(error) });
           return [];
         })
@@ -116,7 +178,7 @@ export class LiteratureService {
 
     if (requestedSources.has('crossref')) {
       providerPromises.push(
-        this.crossrefClient.searchWorks(input.query, input.limit).catch((error) => {
+        this.crossrefClient.searchWorks(input.query, providerLimit).catch((error) => {
           providerErrors.push({ provider: 'crossref', message: error instanceof Error ? error.message : String(error) });
           return [];
         })
@@ -125,8 +187,11 @@ export class LiteratureService {
 
     if (requestedSources.has('semantic_scholar')) {
       providerPromises.push(
-        this.semanticScholarClient.searchWorks(input.query, input.limit).catch((error) => {
-          providerErrors.push({ provider: 'semantic_scholar', message: error instanceof Error ? error.message : String(error) });
+        this.semanticScholarClient.searchWorks(input.query, providerLimit).catch((error) => {
+          providerErrors.push({
+            provider: 'semantic_scholar',
+            message: error instanceof Error ? error.message : String(error)
+          });
           return [];
         })
       );
@@ -134,7 +199,7 @@ export class LiteratureService {
 
     if (requestedSources.has('scholar_scrape')) {
       providerPromises.push(
-        this.searchWithScholarScrape(input.query, input.limit).catch((error) => {
+        this.searchWithScholarScrape(input.query, providerLimit).catch((error) => {
           providerErrors.push({ provider: 'scholar_scrape', message: error instanceof Error ? error.message : String(error) });
           return [];
         })
@@ -147,9 +212,65 @@ export class LiteratureService {
     );
 
     const merged = new Map<string, CanonicalWork>();
+    const doiToKey = new Map<string, string>();
+    const titleToKeys = new Map<string, Set<string>>();
+
+    const indexTitle = (titleKey: string, key: string): void => {
+      const existing = titleToKeys.get(titleKey) ?? new Set<string>();
+      existing.add(key);
+      titleToKeys.set(titleKey, existing);
+    };
+
+    const resolveTargetKey = (work: ProviderWork): string | null => {
+      const normalizedDoi = normalizeDoi(work.doi);
+      if (normalizedDoi && doiToKey.has(normalizedDoi)) {
+        return doiToKey.get(normalizedDoi) ?? null;
+      }
+
+      const titleKey = normalizeTitleKey(work.title);
+      const exactCandidateKeys = [...(titleToKeys.get(titleKey) ?? [])];
+      for (const key of exactCandidateKeys) {
+        const candidate = merged.get(key);
+        if (!candidate) {
+          continue;
+        }
+
+        if (yearsCompatible(candidate.year, work.year) && sharesAuthorSignal(candidate.authors, work.authors)) {
+          return key;
+        }
+      }
+
+      const incomingTokens = tokenSetFromTitle(work.title);
+      let bestKey: string | null = null;
+      let bestSimilarity = 0;
+
+      for (const [key, candidate] of merged.entries()) {
+        if (!yearsCompatible(candidate.year, work.year)) {
+          continue;
+        }
+
+        if (!sharesAuthorSignal(candidate.authors, work.authors)) {
+          continue;
+        }
+
+        const similarity = setJaccard(tokenSetFromTitle(candidate.title), incomingTokens);
+        if (similarity > bestSimilarity) {
+          bestSimilarity = similarity;
+          bestKey = key;
+        }
+      }
+
+      if (bestKey && bestSimilarity >= this.config.researchGraphFuzzyTitleThreshold) {
+        return bestKey;
+      }
+
+      return null;
+    };
 
     for (const work of filtered) {
-      const key = buildKey(work);
+      const targetKey = resolveTargetKey(work);
+      const normalizedDoi = normalizeDoi(work.doi);
+      const titleKey = normalizeTitleKey(work.title);
       const confidence = providerWeight[work.provider] ?? 0.8;
       const provenance: ProvenanceRecord = {
         provider: work.provider,
@@ -158,16 +279,17 @@ export class LiteratureService {
         confidence
       };
 
-      const baseScore = 0.6 * work.score + 0.3 * scoreFromCitations(work.citationCount) + 0.1 * confidence;
+      const relevanceScore = 0.6 * work.score + 0.3 * scoreFromCitations(work.citationCount) + 0.1 * confidence;
 
-      const existing = merged.get(key);
-      if (!existing) {
-        merged.set(key, {
+      if (!targetKey) {
+        const generatedKey = normalizedDoi ?? `title:${titleKey}:year:${work.year ?? 'na'}`;
+
+        merged.set(generatedKey, {
           title: work.title,
           abstract: work.abstract,
           year: work.year,
           venue: work.venue,
-          doi: normalizeDoi(work.doi),
+          doi: normalizedDoi,
           url: work.url,
           paperId: work.providerId,
           citationCount: work.citationCount,
@@ -181,9 +303,19 @@ export class LiteratureService {
           },
           externalIds: work.externalIds,
           fieldsOfStudy: work.fieldsOfStudy,
-          score: baseScore,
+          score: relevanceScore,
           provenance: [provenance]
         });
+
+        if (normalizedDoi) {
+          doiToKey.set(normalizedDoi, generatedKey);
+        }
+        indexTitle(titleKey, generatedKey);
+        continue;
+      }
+
+      const existing = merged.get(targetKey);
+      if (!existing) {
         continue;
       }
 
@@ -191,15 +323,15 @@ export class LiteratureService {
       existing.year = existing.year ?? work.year;
       existing.venue = existing.venue ?? work.venue;
       existing.url = existing.url ?? work.url;
-      existing.doi = existing.doi ?? normalizeDoi(work.doi);
+      existing.doi = existing.doi ?? normalizedDoi;
       existing.citationCount = Math.max(existing.citationCount, work.citationCount);
       existing.influentialCitationCount = Math.max(existing.influentialCitationCount, work.influentialCitationCount);
       existing.referenceCount = Math.max(existing.referenceCount, work.referenceCount);
       existing.authors = existing.authors.length > 0 ? existing.authors : work.authors;
       existing.fieldsOfStudy = mergeFields(existing.fieldsOfStudy, work.fieldsOfStudy);
       existing.externalIds = {
-        ...work.externalIds,
-        ...existing.externalIds
+        ...existing.externalIds,
+        ...work.externalIds
       };
       existing.openAccess = {
         isOpenAccess: existing.openAccess.isOpenAccess || work.openAccess.isOpenAccess,
@@ -207,26 +339,51 @@ export class LiteratureService {
         license: existing.openAccess.license ?? work.openAccess.license
       };
       existing.provenance.push(provenance);
-      existing.score = Math.max(existing.score, baseScore);
+      existing.score = Math.max(existing.score, relevanceScore);
+
+      const latestDoi = existing.doi ?? normalizedDoi;
+      if (latestDoi) {
+        doiToKey.set(latestDoi, targetKey);
+      }
+      indexTitle(titleKey, targetKey);
     }
 
-    const sorted = [...merged.values()]
+    const currentYear = new Date().getFullYear();
+    const ranked = [...merged.values()]
+      .map((work) => {
+        const citationScore = scoreFromCitations(work.citationCount);
+        const recencyScore = work.year ? 1 / Math.max(1, currentYear - work.year + 1) : 0.15;
+        const diversityScore =
+          Math.min(1, new Set(work.provenance.map((record) => record.provider)).size / Math.max(1, requestedSources.size));
+        const blended =
+          0.5 * work.score + 0.25 * citationScore + 0.15 * diversityScore + 0.1 * Math.min(1, recencyScore * 2);
+
+        return {
+          ...work,
+          score: blended
+        };
+      })
       .sort((a, b) => b.score - a.score || (b.citationCount ?? 0) - (a.citationCount ?? 0))
       .slice(0, input.limit);
+
+    const result: LiteratureSearchResult = {
+      query: input.query,
+      totalResults: ranked.length,
+      results: ranked,
+      providerErrors
+    };
+
+    this.setCache(cacheKey, result);
 
     this.logger.debug('Literature graph search complete', {
       query: input.query,
       providers: [...requestedSources],
-      mergedCount: sorted.length,
+      providerLimit,
+      mergedCount: ranked.length,
       providerErrors
     });
 
-    return {
-      query: input.query,
-      totalResults: sorted.length,
-      results: sorted,
-      providerErrors
-    };
+    return cloneResult(result);
   }
 
   async resolveByDoi(doi: string): Promise<CanonicalWork | null> {
@@ -247,6 +404,64 @@ export class LiteratureService {
       result.results[0] ??
       null
     );
+  }
+
+  private createCacheKey(input: LiteratureSearchInput, sources: Set<string>): string {
+    const normalizedFields = (input.fieldsOfStudy ?? []).map((field) => field.trim().toLowerCase()).sort();
+    const normalizedSources = [...sources].sort();
+    const normalizedYearRange = input.yearRange ? `${input.yearRange[0]}:${input.yearRange[1]}` : 'none';
+
+    return JSON.stringify({
+      query: normalizeWhitespace(input.query).toLowerCase(),
+      limit: input.limit,
+      yearRange: normalizedYearRange,
+      fields: normalizedFields,
+      sources: normalizedSources
+    });
+  }
+
+  private getCache(cacheKey: string): LiteratureSearchResult | null {
+    if (this.config.researchGraphCacheTtlMs <= 0) {
+      return null;
+    }
+
+    const cached = this.searchCache.get(cacheKey);
+    if (!cached) {
+      return null;
+    }
+
+    if (cached.expiresAt <= Date.now()) {
+      this.searchCache.delete(cacheKey);
+      return null;
+    }
+
+    return cloneResult(cached.value);
+  }
+
+  private setCache(cacheKey: string, value: LiteratureSearchResult): void {
+    if (this.config.researchGraphCacheTtlMs <= 0) {
+      return;
+    }
+
+    const now = Date.now();
+    for (const [key, cached] of this.searchCache.entries()) {
+      if (cached.expiresAt <= now) {
+        this.searchCache.delete(key);
+      }
+    }
+
+    this.searchCache.set(cacheKey, {
+      value: cloneResult(value),
+      expiresAt: now + this.config.researchGraphCacheTtlMs
+    });
+
+    while (this.searchCache.size > this.config.researchGraphMaxCacheEntries) {
+      const oldestKey = this.searchCache.keys().next().value;
+      if (!oldestKey) {
+        break;
+      }
+      this.searchCache.delete(oldestKey);
+    }
   }
 
   private async searchWithScholarScrape(query: string, limit: number): Promise<ProviderWork[]> {
