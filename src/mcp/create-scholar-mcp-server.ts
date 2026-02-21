@@ -3,6 +3,7 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import type { AppConfig } from '../config.js';
 import { Logger } from '../core/logger.js';
+import { ResearchService } from '../research/research-service.js';
 import { ScholarError } from '../scholar/errors.js';
 import { ScholarService } from '../scholar/scholar-service.js';
 import type { ScholarPaperResult } from '../scholar/types.js';
@@ -57,7 +58,23 @@ const toToolError = (error: unknown): CallToolResult => {
   };
 };
 
-export const createScholarMcpServer = (config: AppConfig, service: ScholarService, logger: Logger): McpServer => {
+const manualWorkSchema = z.object({
+  title: z.string().min(1),
+  abstract: z.string().optional(),
+  year: z.number().int().optional(),
+  venue: z.string().optional(),
+  doi: z.string().optional(),
+  url: z.string().optional(),
+  citation_count: z.number().int().optional(),
+  authors: z.array(z.string()).optional()
+});
+
+export const createScholarMcpServer = (
+  config: AppConfig,
+  service: ScholarService,
+  researchService: ResearchService,
+  logger: Logger
+): McpServer => {
   const server = new McpServer(
     {
       name: config.serverName,
@@ -68,6 +85,381 @@ export const createScholarMcpServer = (config: AppConfig, service: ScholarServic
     {
       capabilities: {
         logging: {}
+      }
+    }
+  );
+
+  server.registerTool(
+    'search_literature_graph',
+    {
+      title: 'Search Federated Literature Graph',
+      description:
+        'Search multiple scholarly metadata providers (OpenAlex, Crossref, Semantic Scholar, optional Scholar scrape) and return canonicalized paper records.',
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true
+      },
+      inputSchema: {
+        query: z.string().min(1).describe('Research query string.'),
+        year_range: z
+          .union([
+            z.tuple([z.number().int(), z.number().int()]),
+            z.object({ start: z.number().int(), end: z.number().int() })
+          ])
+          .optional()
+          .describe('Optional publication year range as [start, end] or {start, end}.'),
+        fields_of_study: z.array(z.string().min(1)).optional().describe('Optional field-of-study filters.'),
+        limit: z.number().int().min(1).max(50).default(10).describe('Maximum number of merged results.'),
+        sources: z
+          .array(z.enum(['openalex', 'crossref', 'semantic_scholar', 'scholar_scrape']))
+          .optional()
+          .describe('Optional source allow-list.')
+      }
+    },
+    async (args): Promise<CallToolResult> => {
+      try {
+        const normalizedYearRange = (() => {
+          if (!args.year_range) {
+            return undefined;
+          }
+
+          if (Array.isArray(args.year_range)) {
+            return args.year_range;
+          }
+
+          return [args.year_range.start, args.year_range.end] as [number, number];
+        })();
+
+        const result = await researchService.searchLiteratureGraph({
+          query: args.query,
+          yearRange: normalizedYearRange,
+          fieldsOfStudy: args.fields_of_study,
+          limit: args.limit,
+          sources: args.sources
+        });
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          structuredContent: result as unknown as Record<string, unknown>
+        };
+      } catch (error) {
+        logger.warn('Federated literature search failed', {
+          tool: 'search_literature_graph',
+          query: args.query,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return toToolError(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'ingest_paper_fulltext',
+    {
+      title: 'Ingest Full-Text Paper',
+      description:
+        'Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a structured document using GROBID/sidecar/simple fallback pipeline.',
+      annotations: {
+        readOnlyHint: false,
+        openWorldHint: true
+      },
+      inputSchema: {
+        doi: z.string().optional().describe('DOI (recommended for OA PDF discovery).'),
+        paper_url: z.string().url().optional().describe('Landing page URL for the paper.'),
+        pdf_url: z.string().url().optional().describe('Direct PDF URL.'),
+        local_pdf_path: z.string().optional().describe('Local absolute or workspace-relative PDF path.'),
+        parse_mode: z.enum(['auto', 'grobid', 'sidecar', 'simple']).default('auto'),
+        ocr_enabled: z.boolean().default(true).describe('Reserved for OCR-capable parser modes.')
+      }
+    },
+    async ({ doi, paper_url, pdf_url, local_pdf_path, parse_mode, ocr_enabled }): Promise<CallToolResult> => {
+      try {
+        if (!doi && !paper_url && !pdf_url && !local_pdf_path) {
+          throw new Error('Provide at least one source: doi, paper_url, pdf_url, or local_pdf_path.');
+        }
+
+        const job = researchService.ingestPaperFullText({
+          doi,
+          paperUrl: paper_url,
+          pdfUrl: pdf_url,
+          localPdfPath: local_pdf_path,
+          parseMode: parse_mode,
+          ocrEnabled: ocr_enabled
+        });
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify(job, null, 2) }],
+          structuredContent: job as unknown as Record<string, unknown>
+        };
+      } catch (error) {
+        logger.warn('Full-text ingestion start failed', {
+          tool: 'ingest_paper_fulltext',
+          doi,
+          paper_url,
+          pdf_url,
+          local_pdf_path,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return toToolError(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'get_ingestion_status',
+    {
+      title: 'Get Full-Text Ingestion Status',
+      description: 'Get the status of a previously started ingest_paper_fulltext job.',
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false
+      },
+      inputSchema: {
+        job_id: z.string().min(1).describe('Ingestion job id returned by ingest_paper_fulltext.')
+      }
+    },
+    async ({ job_id }): Promise<CallToolResult> => {
+      try {
+        const job = researchService.getIngestionStatus(job_id);
+        const payload: Record<string, unknown> = {
+          ...job
+        };
+
+        if (job.status === 'succeeded') {
+          const document = researchService.getParsedDocument(job.documentId);
+          payload.document_summary = {
+            documentId: document.documentId,
+            title: document.title,
+            abstract: document.abstract,
+            parser: document.parser,
+            sections: document.sections.length,
+            references: document.references.length,
+            createdAt: document.createdAt
+          };
+        }
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }],
+          structuredContent: payload
+        };
+      } catch (error) {
+        logger.warn('Ingestion status lookup failed', {
+          tool: 'get_ingestion_status',
+          job_id,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return toToolError(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'extract_granular_paper_details',
+    {
+      title: 'Extract Granular Paper Details',
+      description:
+        'Extract claims, methods, limitations, datasets, metrics, and section-aware summaries from a parsed document.',
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false
+      },
+      inputSchema: {
+        document_id: z.string().min(1),
+        sections: z.array(z.string().min(1)).optional(),
+        include_references: z.boolean().default(true)
+      }
+    },
+    async ({ document_id, sections, include_references }): Promise<CallToolResult> => {
+      try {
+        const result = researchService.extractGranularPaperDetails(document_id, {
+          sections,
+          includeReferences: include_references
+        });
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          structuredContent: result as unknown as Record<string, unknown>
+        };
+      } catch (error) {
+        logger.warn('Granular extraction failed', {
+          tool: 'extract_granular_paper_details',
+          document_id,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return toToolError(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'suggest_contextual_citations',
+    {
+      title: 'Suggest Context-Aware Citations',
+      description: 'Recommend citations from the federated literature graph based on manuscript context.',
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true
+      },
+      inputSchema: {
+        manuscript_text: z.string().min(20),
+        cursor_context: z.string().optional(),
+        style: z.enum(['apa', 'ieee', 'chicago', 'vancouver']).default('apa'),
+        k: z.number().int().min(1).max(30).default(10),
+        recency_bias: z.number().min(0).max(1).default(0.5)
+      }
+    },
+    async ({ manuscript_text, cursor_context, style, k, recency_bias }): Promise<CallToolResult> => {
+      try {
+        const result = await researchService.suggestContextualCitations({
+          manuscriptText: manuscript_text,
+          cursorContext: cursor_context,
+          style,
+          k,
+          recencyBias: recency_bias
+        });
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          structuredContent: result as unknown as Record<string, unknown>
+        };
+      } catch (error) {
+        logger.warn('Citation suggestion failed', {
+          tool: 'suggest_contextual_citations',
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return toToolError(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'build_reference_list',
+    {
+      title: 'Build Reference List',
+      description: 'Generate CSL-formatted bibliography and BibTeX entries from manuscript context or explicit works.',
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true
+      },
+      inputSchema: {
+        style: z.enum(['apa', 'ieee', 'chicago', 'vancouver']).default('apa'),
+        locale: z.string().default('en-US'),
+        manuscript_text: z.string().optional(),
+        works: z.array(manualWorkSchema).optional()
+      }
+    },
+    async ({ style, locale, manuscript_text, works }): Promise<CallToolResult> => {
+      try {
+        if ((!manuscript_text || manuscript_text.trim().length === 0) && (!works || works.length === 0)) {
+          throw new Error('Provide either manuscript_text or works.');
+        }
+
+        const normalizedWorks = (works ?? []).map((work) => ({
+          title: work.title,
+          abstract: work.abstract ?? null,
+          year: work.year ?? null,
+          venue: work.venue ?? null,
+          doi: work.doi ?? null,
+          url: work.url ?? null,
+          paperId: work.doi ?? work.url ?? work.title,
+          citationCount: work.citation_count ?? 0,
+          influentialCitationCount: 0,
+          referenceCount: 0,
+          authors: (work.authors ?? []).map((name) => ({ name })),
+          openAccess: {
+            isOpenAccess: false,
+            pdfUrl: null,
+            license: null
+          },
+          externalIds: {},
+          fieldsOfStudy: [],
+          score: 0.5,
+          provenance: []
+        }));
+
+        const result = await researchService.buildReferenceList({
+          style,
+          locale,
+          manuscriptText: manuscript_text,
+          works: normalizedWorks
+        });
+
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          structuredContent: result as unknown as Record<string, unknown>
+        };
+      } catch (error) {
+        logger.warn('Reference list build failed', {
+          tool: 'build_reference_list',
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return toToolError(error);
+      }
+    }
+  );
+
+  server.registerTool(
+    'validate_manuscript_citations',
+    {
+      title: 'Validate Manuscript Citations',
+      description: 'Validate inline citations against reference entries and detect missing or uncited references.',
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: false
+      },
+      inputSchema: {
+        manuscript_text: z.string().min(20),
+        references: z.array(
+          z.object({
+            id: z.string().optional(),
+            formatted: z.string().min(1),
+            bibtex: z.string().optional()
+          })
+        )
+      }
+    },
+    async ({ manuscript_text, references }): Promise<CallToolResult> => {
+      try {
+        const normalizedReferences = references.map((reference, index) => ({
+          id: reference.id ?? `ref-${index + 1}`,
+          csl: {},
+          formatted: reference.formatted,
+          bibtex: reference.bibtex ?? '',
+          sourceWork: {
+            title: reference.formatted,
+            abstract: null,
+            year: null,
+            venue: null,
+            doi: null,
+            url: null,
+            paperId: reference.id ?? `ref-${index + 1}`,
+            citationCount: 0,
+            influentialCitationCount: 0,
+            referenceCount: 0,
+            authors: [],
+            openAccess: {
+              isOpenAccess: false,
+              license: null,
+              pdfUrl: null
+            },
+            externalIds: {},
+            fieldsOfStudy: [],
+            score: 0,
+            provenance: []
+          }
+        }));
+
+        const result = researchService.validateManuscriptCitations(manuscript_text, normalizedReferences);
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          structuredContent: result as unknown as Record<string, unknown>
+        };
+      } catch (error) {
+        logger.warn('Citation validation failed', {
+          tool: 'validate_manuscript_citations',
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return toToolError(error);
       }
     }
   );

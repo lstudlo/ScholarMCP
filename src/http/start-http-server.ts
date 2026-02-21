@@ -4,6 +4,7 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
 import type { AppConfig } from '../config.js';
 import { Logger } from '../core/logger.js';
 import { createScholarMcpServer } from '../mcp/create-scholar-mcp-server.js';
+import { ResearchService } from '../research/research-service.js';
 import { ScholarService } from '../scholar/scholar-service.js';
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
@@ -91,7 +92,12 @@ const attachCorsHeaders = (response: Response, origin: string | undefined): Resp
   return response;
 };
 
-export const createHttpApp = (config: AppConfig, service: ScholarService, logger: Logger): Hono => {
+export const createHttpApp = (
+  config: AppConfig,
+  service: ScholarService,
+  researchService: ResearchService,
+  logger: Logger
+): Hono => {
   const app = new Hono();
 
   app.get('/', (c) =>
@@ -149,7 +155,7 @@ export const createHttpApp = (config: AppConfig, service: ScholarService, logger
       enableJsonResponse: true
     });
 
-    const server = createScholarMcpServer(config, service, logger);
+    const server = createScholarMcpServer(config, service, researchService, logger);
 
     try {
       await server.connect(transport);
@@ -182,8 +188,13 @@ export const createHttpApp = (config: AppConfig, service: ScholarService, logger
   return app;
 };
 
-export const startHttpServer = (config: AppConfig, service: ScholarService, logger: Logger) => {
-  const app = createHttpApp(config, service, logger);
+export const startHttpServer = (
+  config: AppConfig,
+  service: ScholarService,
+  researchService: ResearchService,
+  logger: Logger
+) => {
+  const app = createHttpApp(config, service, researchService, logger);
 
   const server = serve(
     {

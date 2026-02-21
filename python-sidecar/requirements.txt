@@ -1,0 +1,3 @@
+fastapi==0.117.1
+uvicorn==0.37.0
+pypdf==6.0.0
