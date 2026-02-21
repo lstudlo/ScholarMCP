@@ -1,0 +1,7 @@
+# deps
+node_modules/
+
+# local IDE/system
+.idea/
+.DS_Store
+__pycache__/
