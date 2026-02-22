@@ -3,10 +3,11 @@
 # ScholarMCP
 
 [![npm](https://img.shields.io/npm/v/scholar-mcp)](https://www.npmjs.com/package/scholar-mcp)
-[![latest commit](https://img.shields.io/github/last-commit/lstudlo/ScolarMCP)](https://github.com/lstudlo/ScolarMCP/commits/main)
-[![license](https://img.shields.io/github/license/lstudlo/ScolarMCP)](https://github.com/lstudlo/ScolarMCP/blob/main/LICENSE)
+[![latest commit](https://img.shields.io/github/last-commit/lstudlo/ScholarMCP)](https://github.com/lstudlo/ScholarMCP/commits/main)
+[![license](https://img.shields.io/github/license/lstudlo/ScholarMCP)](https://github.com/lstudlo/ScholarMCP/blob/main/LICENSE)
 
 ScholarMCP is an MCP server for literature research workflows in coding agents.
+Official documentation: https://scholar-mcp.lstudlo.com/
 
 It gives your agent tools to:
 - search papers across multiple sources
@@ -235,9 +236,10 @@ Generation source inputs:
 - Release metadata: git tags in this repository
 
 Cloudflare Pages target settings:
-- Build command: `pnpm install --frozen-lockfile && pnpm --filter @scholar-mcp/docs build`
+- Build command: `pnpm install --frozen-lockfile && pnpm --dir apps/docs build`
 - Build output directory: `apps/docs/dist`
 - Production branch: `main`
+- Canonical docs URL: `https://scholar-mcp.lstudlo.com/`
 
 ## Publish Workflow
 

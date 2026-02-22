@@ -4,17 +4,17 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const siteUrl = process.env.DOCS_SITE_URL ?? 'https://scholar-mcp-docs.pages.dev';
+const siteUrl = process.env.DOCS_SITE_URL ?? 'https://scholar-mcp.lstudlo.com';
 
 export default defineConfig({
   site: siteUrl,
   integrations: [
     starlight({
-      title: 'ScholarMCP Documentation',
+      title: 'ScholarMCP',
       description: 'Official documentation for installing, configuring, and using ScholarMCP.',
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/lstudlo/ScolarMCP' }],
+      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/lstudlo/ScholarMCP' }],
       editLink: {
-        baseUrl: 'https://github.com/lstudlo/ScolarMCP/edit/main/apps/docs/'
+        baseUrl: 'https://github.com/lstudlo/ScholarMCP/edit/main/apps/docs/'
       },
       sidebar: [
         {

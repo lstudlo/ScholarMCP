@@ -21,12 +21,12 @@
     "release:patch:with-release": "pnpm --filter scholar-mcp release:patch:with-release",
     "release:minor:with-release": "pnpm --filter scholar-mcp release:minor:with-release",
     "release:major:with-release": "pnpm --filter scholar-mcp release:major:with-release",
-    "docs:dev": "pnpm --filter @scholar-mcp/docs dev",
-    "docs:build": "pnpm --filter @scholar-mcp/docs build",
-    "docs:check": "pnpm --filter @scholar-mcp/docs check",
-    "docs:sync-api": "pnpm --filter @scholar-mcp/docs sync:api",
-    "docs:sync-releases": "pnpm --filter @scholar-mcp/docs sync:releases",
-    "docs:sync": "pnpm --filter @scholar-mcp/docs sync:generated"
+    "docs:dev": "pnpm --dir apps/docs dev",
+    "docs:build": "pnpm --dir apps/docs build",
+    "docs:check": "pnpm --dir apps/docs check",
+    "docs:sync-api": "pnpm --dir apps/docs sync:api",
+    "docs:sync-releases": "pnpm --dir apps/docs sync:releases",
+    "docs:sync": "pnpm --dir apps/docs sync:generated"
   },
   "devDependencies": {
     "typescript": "5.9.3"

@@ -10,7 +10,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "public/scholarmcp_banner.png"
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -55,5 +56,13 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
+  },
+  "homepage": "https://scholar-mcp.lstudlo.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lstudlo/ScholarMCP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lstudlo/ScholarMCP/issues"
   }
 }

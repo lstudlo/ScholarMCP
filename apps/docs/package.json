@@ -11,10 +11,10 @@
     "build": "pnpm run sync:generated && astro check && astro build",
     "check": "pnpm run sync:generated && astro check",
     "preview": "astro preview",
-    "cf:pages:deploy": "sh -c 'unset CLOUDFLARE_API_TOKEN CF_API_TOKEN && wrangler pages deploy ./dist --project-name scholar-mcp-docs'",
-    "cf:pages:deploy:preview": "sh -c 'unset CLOUDFLARE_API_TOKEN CF_API_TOKEN && wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}'",
-    "cf:pages:deploy:ci": "sh -c 'unset CLOUDFLARE_API_TOKEN CF_API_TOKEN && wrangler pages deploy ./dist --project-name scholar-mcp-docs'",
-    "cf:pages:deploy:preview:ci": "sh -c 'unset CLOUDFLARE_API_TOKEN CF_API_TOKEN && wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}'"
+    "cf:pages:deploy": "wrangler pages deploy ./dist --project-name scholar-mcp-docs",
+    "cf:pages:deploy:preview": "wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}",
+    "cf:pages:deploy:ci": "wrangler pages deploy ./dist --project-name scholar-mcp-docs",
+    "cf:pages:deploy:preview:ci": "wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}"
   },
   "dependencies": {
     "@astrojs/starlight": "latest",
