@@ -25,26 +25,33 @@ Use this if you want Claude Code, Codex, or any MCP-compatible coding agent to r
 ### 1. Prerequisites
 
 - Node.js `>=20`
-- `pnpm`
+- `npm` (for install/publish)
+- `pnpm` (for contributors working from source)
 
-### 2. Install
+### 2. Install as an npm package (recommended)
 
 ```bash
-pnpm install
+npm install -g scholar-mcp
 ```
 
-### 3. Run locally (manual)
+One-off run without global install:
+
+```bash
+npx -y scholar-mcp --transport=stdio
+```
+
+### 3. Run
 
 Stdio mode:
 
 ```bash
-pnpm dev:stdio
+scholar-mcp --transport=stdio
 ```
 
 HTTP mode:
 
 ```bash
-pnpm dev:http
+scholar-mcp --transport=http
 ```
 
 Health check (HTTP mode):
@@ -53,19 +60,37 @@ Health check (HTTP mode):
 curl http://127.0.0.1:3000/health
 ```
 
+### 4. Run from source (contributors)
+
+```bash
+pnpm install
+pnpm dev:stdio
+```
+
 ## Use with Coding Agents
 
 ### Claude Code (recommended)
 
-From the project directory, register this server as project-scoped MCP:
+Register from globally installed binary:
 
 ```bash
-claude mcp add -s project \
+claude mcp add -s user \
   -e SCHOLAR_MCP_TRANSPORT=stdio \
   -e SCHOLAR_REQUEST_DELAY_MS=350 \
   -e RESEARCH_ALLOW_REMOTE_PDFS=true \
   -e RESEARCH_ALLOW_LOCAL_PDFS=true \
-  -- scholar_mcp pnpm --dir /absolute/path/to/ScolarMCP exec tsx src/index.ts --transport=stdio
+  -- scholar_mcp scholar-mcp --transport=stdio
+```
+
+Register without global install:
+
+```bash
+claude mcp add -s user \
+  -e SCHOLAR_MCP_TRANSPORT=stdio \
+  -e SCHOLAR_REQUEST_DELAY_MS=350 \
+  -e RESEARCH_ALLOW_REMOTE_PDFS=true \
+  -e RESEARCH_ALLOW_LOCAL_PDFS=true \
+  -- scholar_mcp npx -y scholar-mcp --transport=stdio
 ```
 
 Check status:
@@ -84,8 +109,8 @@ Add to `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.scholar_mcp]
-command = "pnpm"
-args = ["--dir", "/absolute/path/to/ScolarMCP", "exec", "tsx", "src/index.ts", "--transport=stdio"]
+command = "npx"
+args = ["-y", "scholar-mcp", "--transport=stdio"]
 
 [mcp_servers.scholar_mcp.env]
 SCHOLAR_MCP_TRANSPORT = "stdio"
@@ -97,9 +122,10 @@ RESEARCH_ALLOW_LOCAL_PDFS = "true"
 ### Generic MCP clients
 
 - `stdio` command:
-  - `pnpm --dir /absolute/path/to/ScolarMCP exec tsx src/index.ts --transport=stdio`
+  - `scholar-mcp --transport=stdio`
+  - Or: `npx -y scholar-mcp --transport=stdio`
 - HTTP endpoint:
-  1. Start server with `SCHOLAR_MCP_TRANSPORT=http pnpm exec tsx src/index.ts`
+  1. Start server with `SCHOLAR_MCP_TRANSPORT=http scholar-mcp`
   2. Connect client to `http://127.0.0.1:3000/mcp`
   3. Optional auth: set `SCHOLAR_MCP_API_KEY` and send bearer auth header from your client
 
@@ -155,6 +181,8 @@ Most users only need these:
 - `RESEARCH_GROBID_URL`: optional GROBID endpoint
 - `RESEARCH_PYTHON_SIDECAR_URL`: optional sidecar endpoint
 
+The CLI loads `.env` from the current working directory automatically at startup.
+
 Advanced options exist in `src/config.ts` for timeouts, retries, HTTP session capacity/TTL, provider tuning, and cache behavior.
 
 ## Troubleshooting
@@ -172,6 +200,31 @@ Advanced options exist in `src/config.ts` for timeouts, retries, HTTP session ca
 ```bash
 pnpm check
 pnpm test
+```
+
+## Publish Workflow
+
+```bash
+# 1) update version
+npm version patch
+
+# 2) verify source quality
+pnpm check
+pnpm test
+
+# 3) verify npm package contents and executable bin
+npm run pack:dry-run
+npm pack
+
+# 4) publish to npm
+npm publish
+```
+
+Post-publish smoke test:
+
+```bash
+npx -y scholar-mcp --version
+npx -y scholar-mcp --help
 ```
 
 ## Usage Notes

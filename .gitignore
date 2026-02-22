@@ -5,3 +5,42 @@ node_modules/
 .idea/
 .DS_Store
 __pycache__/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+formlism-old/*
+supabase/.temp/*
+!.vscode/extensions.json
+.idea/*
+.vite/*
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+# Environment files
+# Ignore .env and .env.local.old (may contain secrets)
+.env
+.env.*
+/client_secret_2_311158025414-1lknket00pbkrpe70oq3bttkrk1v8mua.apps.googleusercontent.com.json

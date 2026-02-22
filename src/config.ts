@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { getPackageVersion } from './version.js';
 
 export type TransportMode = 'stdio' | 'http' | 'both';
 
@@ -31,11 +32,13 @@ const booleanFromEnv = (defaultValue: boolean) =>
     return value;
   }, z.boolean().default(defaultValue));
 
+const defaultServerVersion = getPackageVersion();
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   SCHOLAR_MCP_SERVER_NAME: z.string().default('scholar-mcp'),
-  SCHOLAR_MCP_SERVER_VERSION: z.string().default('1.0.0'),
+  SCHOLAR_MCP_SERVER_VERSION: z.string().default(defaultServerVersion),
   SCHOLAR_MCP_TRANSPORT: z.enum(['stdio', 'http', 'both']).default('stdio'),
   SCHOLAR_MCP_HOST: z.string().default('127.0.0.1'),
   SCHOLAR_MCP_PORT: numberFromEnv(3000, 1, 65535),
