@@ -26,9 +26,13 @@
     "test:watch": "vitest",
     "release:preflight": "npm run check && npm run test && npm run pack:dry-run",
     "release:publish": "npm publish",
+    "release:gh": "gh release create v$(node -p \"JSON.parse(require('node:fs').readFileSync('package.json','utf8')).version\") --verify-tag --generate-notes",
     "release:patch": "npm run release:preflight && npm version patch && npm run release:publish && git push --follow-tags",
     "release:minor": "npm run release:preflight && npm version minor && npm run release:publish && git push --follow-tags",
-    "release:major": "npm run release:preflight && npm version major && npm run release:publish && git push --follow-tags"
+    "release:major": "npm run release:preflight && npm version major && npm run release:publish && git push --follow-tags",
+    "release:patch:with-release": "npm run release:patch && npm run release:gh",
+    "release:minor:with-release": "npm run release:minor && npm run release:gh",
+    "release:major:with-release": "npm run release:major && npm run release:gh"
   },
   "engines": {
     "node": ">=20"
