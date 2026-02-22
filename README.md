@@ -1,3 +1,5 @@
+![ScholarMCP banner](public/scholarmcp_banner.svg)
+
 # ScholarMCP
 
 [![npm](https://img.shields.io/npm/v/scholar-mcp)](https://www.npmjs.com/package/scholar-mcp)
