@@ -12,6 +12,7 @@ export default defineConfig({
     starlight({
       title: 'ScholarMCP',
       description: 'Official documentation for installing, configuring, and using ScholarMCP.',
+      favicon: '/favicon.png',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/lstudlo/ScholarMCP' }],
       editLink: {
         baseUrl: 'https://github.com/lstudlo/ScholarMCP/edit/main/apps/docs/'
