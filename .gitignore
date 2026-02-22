@@ -46,3 +46,5 @@ supabase/.temp/*
 .env
 .env.*
 /client_secret_2_311158025414-1lknket00pbkrpe70oq3bttkrk1v8mua.apps.googleusercontent.com.json
+# Astro docs build artifacts
+.astro/

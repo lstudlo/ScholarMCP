@@ -1,0 +1,24 @@
+{
+  "name": "@scholar-mcp/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync:api": "node ../../scripts/generate-docs-api.mjs",
+    "sync:releases": "node ../../scripts/generate-docs-releases.mjs",
+    "sync:generated": "pnpm run sync:api && pnpm run sync:releases",
+    "dev": "pnpm run sync:generated && astro dev",
+    "build": "pnpm run sync:generated && astro check && astro build",
+    "check": "pnpm run sync:generated && astro check",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "latest",
+    "astro": "latest",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,528 @@
+{
+  "generatedFrom": "packages/scholar-mcp/src/mcp/create-scholar-mcp-server.ts",
+  "toolCount": 10,
+  "tools": [
+    {
+      "name": "build_reference_list",
+      "title": "Build Reference List",
+      "description": "Generate CSL-formatted bibliography and BibTeX entries from manuscript context or explicit works.",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "parameters": [
+        {
+          "name": "style",
+          "type": "enum",
+          "required": true,
+          "default": "'apa'",
+          "description": null,
+          "enumValues": [
+            "apa",
+            "ieee",
+            "chicago",
+            "vancouver"
+          ],
+          "schema": "z.enum(['apa', 'ieee', 'chicago', 'vancouver']).default('apa')"
+        },
+        {
+          "name": "locale",
+          "type": "string",
+          "required": true,
+          "default": "'en-US'",
+          "description": null,
+          "enumValues": null,
+          "schema": "z.string().default('en-US')"
+        },
+        {
+          "name": "manuscript_text",
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": null,
+          "enumValues": null,
+          "schema": "z.string().optional()"
+        },
+        {
+          "name": "works",
+          "type": "array",
+          "required": false,
+          "default": null,
+          "description": null,
+          "enumValues": null,
+          "schema": "z.array(manualWorkSchema).optional()"
+        }
+      ]
+    },
+    {
+      "name": "extract_granular_paper_details",
+      "title": "Extract Granular Paper Details",
+      "description": "Extract claims, methods, limitations, datasets, metrics, and section-aware summaries from a parsed document.",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      },
+      "parameters": [
+        {
+          "name": "document_id",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": null,
+          "enumValues": null,
+          "schema": "z.string().min(1)"
+        },
+        {
+          "name": "sections",
+          "type": "array",
+          "required": false,
+          "default": null,
+          "description": null,
+          "enumValues": null,
+          "schema": "z.array(z.string().min(1)).optional()"
+        },
+        {
+          "name": "include_references",
+          "type": "boolean",
+          "required": true,
+          "default": "true",
+          "description": null,
+          "enumValues": null,
+          "schema": "z.boolean().default(true)"
+        }
+      ]
+    },
+    {
+      "name": "get_author_info",
+      "title": "Get Author Info",
+      "description": "Retrieve a Google Scholar author profile and top publications by author name.",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "parameters": [
+        {
+          "name": "author_name",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": "Full author name to resolve in Google Scholar",
+          "enumValues": null,
+          "schema": "z.string().min(1).describe('Full author name to resolve in Google Scholar')"
+        },
+        {
+          "name": "max_publications",
+          "type": "number",
+          "required": true,
+          "default": "5",
+          "description": null,
+          "enumValues": null,
+          "schema": "z.number().int().min(1).max(20).default(5)"
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "required": true,
+          "default": "config.scholarLanguage",
+          "description": null,
+          "enumValues": null,
+          "schema": "z.string().default(config.scholarLanguage)"
+        }
+      ]
+    },
+    {
+      "name": "get_ingestion_status",
+      "title": "Get Full-Text Ingestion Status",
+      "description": "Get the status of a previously started ingest_paper_fulltext job.",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      },
+      "parameters": [
+        {
+          "name": "job_id",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": "Ingestion job id returned by ingest_paper_fulltext.",
+          "enumValues": null,
+          "schema": "z.string().min(1).describe('Ingestion job id returned by ingest_paper_fulltext.')"
+        }
+      ]
+    },
+    {
+      "name": "ingest_paper_fulltext",
+      "title": "Ingest Full-Text Paper",
+      "description": "Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a structured document using GROBID/sidecar/simple fallback pipeline.",
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true
+      },
+      "parameters": [
+        {
+          "name": "doi",
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "DOI (recommended for OA PDF discovery).",
+          "enumValues": null,
+          "schema": "z.string().optional().describe('DOI (recommended for OA PDF discovery).')"
+        },
+        {
+          "name": "paper_url",
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "Landing page URL for the paper.",
+          "enumValues": null,
+          "schema": "z.string().url().optional().describe('Landing page URL for the paper.')"
+        },
+        {
+          "name": "pdf_url",
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "Direct PDF URL.",
+          "enumValues": null,
+          "schema": "z.string().url().optional().describe('Direct PDF URL.')"
+        },
+        {
+          "name": "local_pdf_path",
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "Local absolute or workspace-relative PDF path.",
+          "enumValues": null,
+          "schema": "z.string().optional().describe('Local absolute or workspace-relative PDF path.')"
+        },
+        {
+          "name": "parse_mode",
+          "type": "enum",
+          "required": true,
+          "default": "'auto'",
+          "description": null,
+          "enumValues": [
+            "auto",
+            "grobid",
+            "sidecar",
+            "simple"
+          ],
+          "schema": "z.enum(['auto', 'grobid', 'sidecar', 'simple']).default('auto')"
+        },
+        {
+          "name": "ocr_enabled",
+          "type": "boolean",
+          "required": true,
+          "default": "true",
+          "description": "Reserved for OCR-capable parser modes.",
+          "enumValues": null,
+          "schema": "z.boolean().default(true).describe('Reserved for OCR-capable parser modes.')"
+        }
+      ]
+    },
+    {
+      "name": "search_google_scholar_advanced",
+      "title": "Search Google Scholar with Advanced Filters",
+      "description": "Search Google Scholar using keyword, author, year-range, phrase, and exclusion filters.",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "parameters": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": "General search query",
+          "enumValues": null,
+          "schema": "z.string().min(1).describe('General search query')"
+        },
+        {
+          "name": "author",
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "Author filter value",
+          "enumValues": null,
+          "schema": "z.string().optional().describe('Author filter value')"
+        },
+        {
+          "name": "year_range",
+          "type": "number",
+          "required": false,
+          "default": null,
+          "description": "Year range as [start, end] or { start, end }",
+          "enumValues": null,
+          "schema": "z .union([ z.tuple([z.number().int(), z.number().int()]), z.object({ start: z.number().int(), end: z.number().int() }) ]) .optional() .describe('Year range as [start, end] or { start, end }')"
+        },
+        {
+          "name": "exact_phrase",
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "Exact phrase that must appear in results",
+          "enumValues": null,
+          "schema": "z.string().optional().describe('Exact phrase that must appear in results')"
+        },
+        {
+          "name": "exclude_words",
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "Words that should be excluded from results",
+          "enumValues": null,
+          "schema": "z.string().optional().describe('Words that should be excluded from results')"
+        },
+        {
+          "name": "title_only",
+          "type": "boolean",
+          "required": true,
+          "default": "false",
+          "description": "Restrict search terms to title only",
+          "enumValues": null,
+          "schema": "z.boolean().default(false).describe('Restrict search terms to title only')"
+        },
+        {
+          "name": "num_results",
+          "type": "number",
+          "required": true,
+          "default": "5",
+          "description": null,
+          "enumValues": null,
+          "schema": "z.number().int().min(1).max(20).default(5)"
+        },
+        {
+          "name": "start",
+          "type": "number",
+          "required": true,
+          "default": "0",
+          "description": null,
+          "enumValues": null,
+          "schema": "z.number().int().min(0).default(0)"
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "required": true,
+          "default": "config.scholarLanguage",
+          "description": null,
+          "enumValues": null,
+          "schema": "z.string().default(config.scholarLanguage)"
+        }
+      ]
+    },
+    {
+      "name": "search_google_scholar_key_words",
+      "title": "Search Google Scholar by Keywords",
+      "description": "Search Google Scholar using keywords and return paper metadata.",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "parameters": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": "Search query string",
+          "enumValues": null,
+          "schema": "z.string().min(1).describe('Search query string')"
+        },
+        {
+          "name": "num_results",
+          "type": "number",
+          "required": true,
+          "default": "5",
+          "description": "Number of results to return",
+          "enumValues": null,
+          "schema": "z.number().int().min(1).max(20).default(5).describe('Number of results to return')"
+        },
+        {
+          "name": "start",
+          "type": "number",
+          "required": true,
+          "default": "0",
+          "description": "Offset for pagination (0, 10, 20, ...)",
+          "enumValues": null,
+          "schema": "z.number().int().min(0).default(0).describe('Offset for pagination (0, 10, 20, ...)')"
+        },
+        {
+          "name": "language",
+          "type": "string",
+          "required": true,
+          "default": "config.scholarLanguage",
+          "description": "Google Scholar language code (e.g., en)",
+          "enumValues": null,
+          "schema": "z.string().default(config.scholarLanguage).describe('Google Scholar language code (e.g., en)')"
+        }
+      ]
+    },
+    {
+      "name": "search_literature_graph",
+      "title": "Search Federated Literature Graph",
+      "description": "Search multiple scholarly metadata providers (OpenAlex, Crossref, Semantic Scholar, optional Scholar scrape) and return canonicalized paper records.",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "parameters": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": "Research query string.",
+          "enumValues": null,
+          "schema": "z.string().min(1).describe('Research query string.')"
+        },
+        {
+          "name": "year_range",
+          "type": "number",
+          "required": false,
+          "default": null,
+          "description": "Optional publication year range as [start, end] or {start, end}.",
+          "enumValues": null,
+          "schema": "z .union([ z.tuple([z.number().int(), z.number().int()]), z.object({ start: z.number().int(), end: z.number().int() }) ]) .optional() .describe('Optional publication year range as [start, end] or {start, end}.')"
+        },
+        {
+          "name": "fields_of_study",
+          "type": "array",
+          "required": false,
+          "default": null,
+          "description": "Optional field-of-study filters.",
+          "enumValues": null,
+          "schema": "z.array(z.string().min(1)).optional().describe('Optional field-of-study filters.')"
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "required": true,
+          "default": "10",
+          "description": "Maximum number of merged results.",
+          "enumValues": null,
+          "schema": "z.number().int().min(1).max(50).default(10).describe('Maximum number of merged results.')"
+        },
+        {
+          "name": "sources",
+          "type": "enum",
+          "required": false,
+          "default": null,
+          "description": "Optional source allow-list.",
+          "enumValues": [
+            "openalex",
+            "crossref",
+            "semantic_scholar",
+            "scholar_scrape"
+          ],
+          "schema": "z .array(z.enum(['openalex', 'crossref', 'semantic_scholar', 'scholar_scrape'])) .optional() .describe('Optional source allow-list.')"
+        }
+      ]
+    },
+    {
+      "name": "suggest_contextual_citations",
+      "title": "Suggest Context-Aware Citations",
+      "description": "Recommend citations from the federated literature graph based on manuscript context.",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "parameters": [
+        {
+          "name": "manuscript_text",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": null,
+          "enumValues": null,
+          "schema": "z.string().min(20)"
+        },
+        {
+          "name": "cursor_context",
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": null,
+          "enumValues": null,
+          "schema": "z.string().optional()"
+        },
+        {
+          "name": "style",
+          "type": "enum",
+          "required": true,
+          "default": "'apa'",
+          "description": null,
+          "enumValues": [
+            "apa",
+            "ieee",
+            "chicago",
+            "vancouver"
+          ],
+          "schema": "z.enum(['apa', 'ieee', 'chicago', 'vancouver']).default('apa')"
+        },
+        {
+          "name": "k",
+          "type": "number",
+          "required": true,
+          "default": "10",
+          "description": null,
+          "enumValues": null,
+          "schema": "z.number().int().min(1).max(30).default(10)"
+        },
+        {
+          "name": "recency_bias",
+          "type": "number",
+          "required": true,
+          "default": "0.5",
+          "description": null,
+          "enumValues": null,
+          "schema": "z.number().min(0).max(1).default(0.5)"
+        }
+      ]
+    },
+    {
+      "name": "validate_manuscript_citations",
+      "title": "Validate Manuscript Citations",
+      "description": "Validate inline citations against reference entries and detect missing or uncited references.",
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false
+      },
+      "parameters": [
+        {
+          "name": "manuscript_text",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "description": null,
+          "enumValues": null,
+          "schema": "z.string().min(20)"
+        },
+        {
+          "name": "style",
+          "type": "enum",
+          "required": false,
+          "default": null,
+          "description": null,
+          "enumValues": [
+            "apa",
+            "ieee",
+            "chicago",
+            "vancouver"
+          ],
+          "schema": "z.enum(['apa', 'ieee', 'chicago', 'vancouver']).optional()"
+        },
+        {
+          "name": "references",
+          "type": "array",
+          "required": false,
+          "default": null,
+          "description": null,
+          "enumValues": null,
+          "schema": "z.array( z.object({ id: z.string().optional(), formatted: z.string().min(1), bibtex: z.string().optional() }) )"
+        }
+      ]
+    }
+  ]
+}

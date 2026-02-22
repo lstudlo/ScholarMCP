@@ -1,0 +1,36 @@
+---
+title: Deploy on Cloudflare Pages
+description: Production and preview deployment setup for the docs app.
+sidebar:
+  order: 1
+---
+
+## Pages Project Settings
+
+Use a Git-integrated Cloudflare Pages project connected to this repository.
+
+- Framework preset: `Astro`
+- Root directory: repository root
+- Build command: `pnpm install --frozen-lockfile && pnpm --filter @scholar-mcp/docs build`
+- Build output directory: `apps/docs/dist`
+- Production branch: `main`
+
+## Build Watch Paths
+
+Recommended include paths:
+
+- `apps/docs/**`
+- `packages/scholar-mcp/src/**`
+- `packages/scholar-mcp/package.json`
+- `scripts/**`
+- `README.md`
+- `package.json`
+- `pnpm-lock.yaml`
+
+## Local Pages Preview via Wrangler
+
+```bash
+cd apps/docs
+pnpm run build
+npx wrangler pages dev ./dist
+```

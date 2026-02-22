@@ -1,0 +1,55 @@
+name: docs
+
+on:
+  pull_request:
+    paths:
+      - 'apps/docs/**'
+      - 'packages/scholar-mcp/src/**'
+      - 'packages/scholar-mcp/package.json'
+      - 'scripts/generate-docs-*.mjs'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/docs/**'
+      - 'packages/scholar-mcp/src/**'
+      - 'packages/scholar-mcp/package.json'
+      - 'scripts/generate-docs-*.mjs'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build docs
+        run: pnpm docs:build
+
+      - name: Verify generated docs are committed
+        run: |
+          git diff --exit-code \
+            apps/docs/src/generated/mcp-tools.json \
+            apps/docs/src/generated/releases.json \
+            apps/docs/src/content/docs/reference/mcp-tools.mdx \
+            apps/docs/src/content/docs/releases/index.mdx
