@@ -1,0 +1,23 @@
+---
+const { siteTitleHref } = Astro.locals.starlightRoute;
+---
+
+<a href={siteTitleHref} class="site-title" translate="no">
+  ScholarMCP
+</a>
+
+<style>
+  @layer starlight.core {
+    .site-title {
+      display: inline-flex;
+      align-items: center;
+      min-width: 0;
+      color: var(--sl-color-text-accent);
+      text-decoration: none;
+      font-size: var(--sl-text-lg);
+      font-weight: 650;
+      letter-spacing: 0.01em;
+      line-height: 1;
+    }
+  }
+</style>

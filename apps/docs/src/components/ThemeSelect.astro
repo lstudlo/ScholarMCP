@@ -1,0 +1,114 @@
+---
+import { Moon, Sun } from '@lucide/astro';
+
+const a11yLabel = Astro.locals.t('themeSelect.accessibleLabel');
+---
+
+<starlight-theme-toggle>
+  <button type="button" class="theme-toggle" aria-label={a11yLabel} title={a11yLabel}>
+    <Sun class="icon sun" size={16} stroke-width={2} aria-hidden="true" />
+    <Moon class="icon moon" size={16} stroke-width={2} aria-hidden="true" />
+  </button>
+</starlight-theme-toggle>
+
+<script>
+  type Theme = 'light' | 'dark';
+
+  const storageKey = 'starlight-theme';
+
+  const preferredTheme = (): Theme =>
+    matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+
+  const readStoredTheme = (): Theme | null => {
+    if (typeof localStorage === 'undefined') return null;
+    const value = localStorage.getItem(storageKey);
+    return value === 'light' || value === 'dark' ? value : null;
+  };
+
+  const applyTheme = (theme: Theme) => {
+    document.documentElement.dataset.theme = theme;
+  };
+
+  const storeTheme = (theme: Theme) => {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(storageKey, theme);
+  };
+
+  const resolveInitialTheme = (): Theme =>
+    readStoredTheme() ?? (document.documentElement.dataset.theme === 'light' ? 'light' : preferredTheme());
+
+  class StarlightThemeToggle extends HTMLElement {
+    mediaQuery = matchMedia('(prefers-color-scheme: light)');
+    onSystemThemeChange = () => {
+      if (!readStoredTheme()) applyTheme(preferredTheme());
+    };
+
+    connectedCallback() {
+      const button = this.querySelector('button');
+      if (!(button instanceof HTMLButtonElement)) return;
+
+      applyTheme(resolveInitialTheme());
+
+      button.addEventListener('click', () => {
+        const nextTheme: Theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        applyTheme(nextTheme);
+        storeTheme(nextTheme);
+      });
+
+      this.mediaQuery.addEventListener('change', this.onSystemThemeChange);
+    }
+
+    disconnectedCallback() {
+      this.mediaQuery.removeEventListener('change', this.onSystemThemeChange);
+    }
+  }
+
+  if (!customElements.get('starlight-theme-toggle')) {
+    customElements.define('starlight-theme-toggle', StarlightThemeToggle);
+  }
+</script>
+
+<style>
+  @layer starlight.core {
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 9999px;
+      border: 1px solid var(--sl-color-hairline-light);
+      background-color: var(--sl-color-bg-nav);
+      color: var(--sl-color-text);
+      box-shadow: var(--sl-shadow-sm);
+      cursor: pointer;
+      transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease,
+        transform 160ms ease;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--sl-color-accent);
+      color: var(--sl-color-text-accent);
+      transform: translateY(-1px);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: 2px solid var(--sl-color-accent);
+      outline-offset: 2px;
+    }
+
+    .icon {
+      display: none;
+    }
+
+    :root[data-theme='light'] .sun,
+    :root[data-theme='dark'] .moon {
+      display: block;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .theme-toggle {
+        transition: none;
+      }
+    }
+  }
+</style>

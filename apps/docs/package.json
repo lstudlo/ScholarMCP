@@ -14,7 +14,11 @@
   },
   "dependencies": {
     "@astrojs/starlight": "latest",
+    "@astrojs/starlight-tailwind": "^4.0.2",
+    "@lucide/astro": "^0.575.0",
+    "@tailwindcss/vite": "^4.2.0",
     "astro": "latest",
+    "tailwindcss": "^4.2.0",
     "zod": "3.25.76"
   },
   "devDependencies": {

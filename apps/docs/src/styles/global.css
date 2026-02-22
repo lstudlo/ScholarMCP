@@ -1,0 +1,55 @@
+@layer base, starlight, theme, components, utilities;
+
+@import '@astrojs/starlight-tailwind';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Force exact page/chrome background colors per mode. */
+:root {
+  /* Accent color palette used by Starlight/Tailwind UI */
+  --color-accent-50: #eff6ff;
+  --color-accent-100: #dbeafe;
+  --color-accent-200: #bfdbfe;
+  --color-accent-300: #93c5fd;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-accent-700: #1d4ed8;
+  --color-accent-800: #1e40af;
+  --color-accent-900: #1e3a8a;
+  --color-accent-950: #172554;
+
+  /* Full typography scale */
+  --sl-text-2xs: 0.75rem;
+  --sl-text-xs: 0.875rem;
+  --sl-text-sm: 0.925rem;
+  --sl-text-base: 1rem;
+  --sl-text-lg: 1.175rem;
+  --sl-text-xl: 1.375rem;
+  --sl-text-2xl: 1.625rem;
+  --sl-text-3xl: 2rem;
+  --sl-text-4xl: 2.5rem;
+  --sl-text-5xl: 3.125rem;
+  --sl-text-6xl: 4.25rem;
+
+  /* Semantic mappings */
+  --sl-text-body: var(--sl-text-base);
+  --sl-text-body-sm: var(--sl-text-sm);
+  --sl-text-code: var(--sl-text-sm);
+  --sl-text-code-sm: var(--sl-text-xs);
+  --sl-text-h1: var(--sl-text-4xl);
+  --sl-text-h2: var(--sl-text-3xl);
+  --sl-text-h3: var(--sl-text-2xl);
+  --sl-text-h4: var(--sl-text-xl);
+  --sl-text-h5: var(--sl-text-lg);
+
+  --sl-color-bg: #ffffff;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #ffffff;
+}
+
+:root[data-theme='dark'] {
+  --sl-color-bg: #000000;
+  --sl-color-bg-nav: #000000;
+  --sl-color-bg-sidebar: #000000;
+}
