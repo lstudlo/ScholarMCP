@@ -4,8 +4,10 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const siteUrl = process.env.DOCS_SITE_URL ?? 'https://scholar-mcp-docs.pages.dev';
 
 export default defineConfig({
+  site: siteUrl,
   integrations: [
     starlight({
       title: 'ScholarMCP Documentation',

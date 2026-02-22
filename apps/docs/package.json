@@ -10,7 +10,9 @@
     "dev": "pnpm run sync:generated && astro dev",
     "build": "pnpm run sync:generated && astro check && astro build",
     "check": "pnpm run sync:generated && astro check",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "cf:pages:deploy": "wrangler pages deploy ./dist --project-name scholar-mcp-docs",
+    "cf:pages:deploy:preview": "wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}"
   },
   "dependencies": {
     "@astrojs/starlight": "latest",
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.67.0"
   }
 }

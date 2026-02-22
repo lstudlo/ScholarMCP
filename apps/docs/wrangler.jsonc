@@ -1,4 +1,5 @@
 {
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "scholar-mcp-docs",
   "compatibility_date": "2026-02-22",
   "pages_build_output_dir": "./dist"
