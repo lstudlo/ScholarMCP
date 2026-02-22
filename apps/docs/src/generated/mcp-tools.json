@@ -153,7 +153,7 @@
     {
       "name": "ingest_paper_fulltext",
       "title": "Ingest Full-Text Paper",
-      "description": "Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a structured document using GROBID/sidecar/simple fallback pipeline.",
+      "description": "Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a structured document using GROBID/simple fallback pipeline.",
       "annotations": {
         "readOnlyHint": false,
         "openWorldHint": true
@@ -204,10 +204,9 @@
           "enumValues": [
             "auto",
             "grobid",
-            "sidecar",
             "simple"
           ],
-          "schema": "z.enum(['auto', 'grobid', 'sidecar', 'simple']).default('auto')"
+          "schema": "z.enum(['auto', 'grobid', 'simple']).default('auto')"
         },
         {
           "name": "ocr_enabled",

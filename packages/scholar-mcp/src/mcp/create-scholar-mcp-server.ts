@@ -158,7 +158,7 @@ export const createScholarMcpServer = (
     {
       title: 'Ingest Full-Text Paper',
       description:
-        'Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a structured document using GROBID/sidecar/simple fallback pipeline.',
+        'Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a structured document using GROBID/simple fallback pipeline.',
       annotations: {
         readOnlyHint: false,
         openWorldHint: true
@@ -168,7 +168,7 @@ export const createScholarMcpServer = (
         paper_url: z.string().url().optional().describe('Landing page URL for the paper.'),
         pdf_url: z.string().url().optional().describe('Direct PDF URL.'),
         local_pdf_path: z.string().optional().describe('Local absolute or workspace-relative PDF path.'),
-        parse_mode: z.enum(['auto', 'grobid', 'sidecar', 'simple']).default('auto'),
+        parse_mode: z.enum(['auto', 'grobid', 'simple']).default('auto'),
         ocr_enabled: z.boolean().default(true).describe('Reserved for OCR-capable parser modes.')
       }
     },

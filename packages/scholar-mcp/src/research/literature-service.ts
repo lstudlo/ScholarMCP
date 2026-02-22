@@ -4,6 +4,7 @@ import { ScholarService } from '../scholar/scholar-service.js';
 import type { CanonicalWork, ProvenanceRecord } from './types.js';
 import { normalizeDoi, normalizeWhitespace, parseYear, tokenizeForRanking } from './utils.js';
 import { ResearchHttpClient } from './http-client.js';
+import { ResearchProviderError } from './errors.js';
 import type { ProviderWork } from './providers/openalex-client.js';
 import { OpenAlexClient } from './providers/openalex-client.js';
 import { CrossrefClient } from './providers/crossref-client.js';
@@ -392,9 +393,51 @@ export class LiteratureService {
       return null;
     }
 
+    try {
+      const openAlexExact = await this.openAlexClient.getWorkByDoi(normalized);
+      if (openAlexExact) {
+        return {
+          title: openAlexExact.title,
+          abstract: openAlexExact.abstract,
+          year: openAlexExact.year,
+          venue: openAlexExact.venue,
+          doi: openAlexExact.doi,
+          url: openAlexExact.url,
+          paperId: openAlexExact.providerId,
+          citationCount: openAlexExact.citationCount,
+          influentialCitationCount: openAlexExact.influentialCitationCount,
+          referenceCount: openAlexExact.referenceCount,
+          authors: openAlexExact.authors,
+          openAccess: {
+            isOpenAccess: openAlexExact.openAccess.isOpenAccess,
+            pdfUrl: openAlexExact.openAccess.pdfUrl,
+            license: openAlexExact.openAccess.license
+          },
+          externalIds: openAlexExact.externalIds,
+          fieldsOfStudy: openAlexExact.fieldsOfStudy,
+          score: openAlexExact.score,
+          provenance: [
+            {
+              provider: 'openalex',
+              sourceUrl: openAlexExact.sourceUrl,
+              fetchedAt: new Date().toISOString(),
+              confidence: providerWeight.openalex
+            }
+          ]
+        };
+      }
+    } catch (error) {
+      if (!(error instanceof ResearchProviderError) || error.status !== 404) {
+        this.logger.warn('OpenAlex DOI resolve failed', {
+          doi: normalized,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+
     const result = await this.searchGraph({
       query: normalized,
-      limit: 10,
+      limit: 50,
       sources: ['openalex', 'crossref', 'semantic_scholar']
     });
 

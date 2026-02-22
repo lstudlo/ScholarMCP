@@ -101,4 +101,40 @@ describe('literature-service', () => {
     expect(first.results[0]?.provenance.length).toBeGreaterThanOrEqual(2);
     expect(second.results).toHaveLength(2);
   });
+
+  it('resolves exact DOI using direct OpenAlex lookup before ranked graph fallback', async () => {
+    const config = parseConfig({
+      NODE_ENV: 'test'
+    });
+
+    const service = new LiteratureService(config, new Logger('error'), {} as never);
+
+    const openAlexByDoi = vi.fn(async () =>
+      makeWork({
+        provider: 'openalex',
+        providerId: 'openalex:doi',
+        doi: '10.1038/s41467-024-55563-6',
+        url: 'https://doi.org/10.1038/s41467-024-55563-6',
+        openAccess: {
+          isOpenAccess: true,
+          pdfUrl: 'https://www.nature.com/articles/s41467-024-55563-6.pdf',
+          license: 'cc-by'
+        }
+      })
+    );
+
+    const searchGraphSpy = vi.spyOn(service, 'searchGraph');
+
+    (service as unknown as { openAlexClient: { getWorkByDoi: typeof openAlexByDoi } }).openAlexClient = {
+      getWorkByDoi: openAlexByDoi
+    };
+
+    const resolved = await service.resolveByDoi('10.1038/s41467-024-55563-6');
+
+    expect(openAlexByDoi).toHaveBeenCalledWith('10.1038/s41467-024-55563-6');
+    expect(searchGraphSpy).not.toHaveBeenCalled();
+    expect(resolved?.doi).toBe('10.1038/s41467-024-55563-6');
+    expect(resolved?.openAccess.pdfUrl).toBe('https://www.nature.com/articles/s41467-024-55563-6.pdf');
+    expect(resolved?.provenance[0]?.provider).toBe('openalex');
+  });
 });

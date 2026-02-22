@@ -24,7 +24,7 @@ Use this if you want Claude Code, Codex, or any MCP-compatible coding agent to r
 
 - Transports: `stdio` (recommended) and HTTP (`/mcp`)
 - Research providers: Google Scholar, OpenAlex, Crossref, Semantic Scholar
-- Full-text parsing pipeline: `grobid -> sidecar -> simple`
+- Full-text parsing pipeline: `grobid -> simple`
 - Tooling for thesis/paper workflows: ingestion, extraction, references, validation
 
 ## Quick Start
@@ -158,24 +158,6 @@ RESEARCH_ALLOW_LOCAL_PDFS = "true"
 - "Given this draft section, suggest citations in IEEE style and generate BibTeX."
 - "Validate my manuscript citations against this reference list and show missing citations."
 
-## Optional Python Sidecar (better parsing fallback)
-
-Run sidecar:
-
-```bash
-cd ../../services/python-sidecar
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app:app --host 127.0.0.1 --port 8090
-```
-
-Then set:
-
-```bash
-RESEARCH_PYTHON_SIDECAR_URL=http://127.0.0.1:8090
-```
-
 ## Configuration
 
 Most users only need these:
@@ -186,7 +168,6 @@ Most users only need these:
 - `RESEARCH_ALLOW_LOCAL_PDFS`: allow local PDF ingestion (default: `true`)
 - `SCHOLAR_MCP_API_KEY`: optional bearer token for HTTP mode
 - `RESEARCH_GROBID_URL`: optional GROBID endpoint
-- `RESEARCH_PYTHON_SIDECAR_URL`: optional sidecar endpoint
 
 The CLI loads `.env` from the current working directory automatically at startup.
 
@@ -197,7 +178,7 @@ Advanced options exist in `src/config.ts` for timeouts, retries, HTTP session ca
 - `Invalid environment variable format` in `claude mcp add`:
   - Add `--` before the MCP server name (see Claude setup command above).
 - `Unable to resolve a downloadable PDF URL from input` on DOI ingestion:
-  - The DOI landing page may not expose a downloadable PDF.
+  - The DOI and landing page may not expose an accessible PDF URL.
   - Retry with `pdf_url` (direct PDF) or `local_pdf_path`.
 - Too many Scholar failures or throttling:
   - Increase `SCHOLAR_REQUEST_DELAY_MS` (for example `500` to `1000`).

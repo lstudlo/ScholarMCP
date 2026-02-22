@@ -29,9 +29,10 @@ export class SemanticScholarClient {
   ) {}
 
   async searchWorks(query: string, limit: number): Promise<ProviderWork[]> {
-    const url = new URL('/paper/search', this.config.researchSemanticScholarBaseUrl.endsWith('/')
+    const baseUrl = this.config.researchSemanticScholarBaseUrl.endsWith('/')
       ? this.config.researchSemanticScholarBaseUrl
-      : `${this.config.researchSemanticScholarBaseUrl}/`);
+      : `${this.config.researchSemanticScholarBaseUrl}/`;
+    const url = new URL('paper/search', baseUrl);
 
     url.searchParams.set('query', query);
     url.searchParams.set('limit', String(limit));

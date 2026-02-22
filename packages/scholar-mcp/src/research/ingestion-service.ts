@@ -10,7 +10,7 @@ import type { CanonicalWork, IngestionJob, ParsedDocument, ParsedReference, Sect
 import { makeStableId, nowIso, normalizeWhitespace, parseYear } from './utils.js';
 import { LiteratureService } from './literature-service.js';
 
-export type ParseMode = 'auto' | 'grobid' | 'sidecar' | 'simple';
+export type ParseMode = 'auto' | 'grobid' | 'simple';
 
 export interface IngestPaperInput {
   doi?: string;
@@ -42,6 +42,7 @@ interface ParseOutput {
 }
 
 const DOI_REGEX = /10\.\d{4,9}\/[\-._;()/:A-Z0-9]+/i;
+const PDF_LINK_REGEX = /href=["']([^"']+\.pdf(?:\?[^"']*)?)["']/i;
 
 const toAbsolutePath = (value: string): string => (value.startsWith('/') ? value : resolve(process.cwd(), value));
 
@@ -170,6 +171,14 @@ const parseGrobidXml = (xml: string): ParseOutput => {
     sections,
     references
   };
+};
+
+const resolveUrlCandidate = (candidate: string, baseUrl: string): string | null => {
+  try {
+    return new URL(candidate, baseUrl).toString();
+  } catch {
+    return null;
+  }
 };
 
 export class IngestionService {
@@ -335,10 +344,15 @@ export class IngestionService {
       resolvedWork = await this.literatureService.resolveByDoi(input.doi);
     }
 
+    const paperUrlCandidate = input.paperUrl ?? resolvedWork?.url ?? null;
+    const paperUrlPdfCandidate = paperUrlCandidate?.toLowerCase().endsWith('.pdf') ? paperUrlCandidate : null;
+    const discoveredPdfFromLanding = await this.resolvePdfUrlFromLandingPages([paperUrlCandidate, resolvedWork?.url]);
+
     const resolvedPdfUrl =
       input.pdfUrl ??
       resolvedWork?.openAccess.pdfUrl ??
-      (input.paperUrl?.toLowerCase().endsWith('.pdf') ? input.paperUrl : null);
+      paperUrlPdfCandidate ??
+      discoveredPdfFromLanding;
 
     if (!resolvedPdfUrl) {
       throw new IngestionError('Unable to resolve a downloadable PDF URL from input.');
@@ -369,12 +383,6 @@ export class IngestionService {
               }
               return await this.parseWithGrobid(filePath);
             }
-            case 'sidecar': {
-              if (!this.config.researchPythonSidecarUrl) {
-                continue;
-              }
-              return await this.parseWithSidecar(filePath);
-            }
             case 'simple': {
               return await this.parseWithSimplePdf(filePath);
             }
@@ -397,15 +405,11 @@ export class IngestionService {
 
   private resolveParserOrder(parseMode: ParseMode): ParseMode[] {
     if (parseMode === 'auto') {
-      return ['grobid', 'sidecar', 'simple'];
+      return ['grobid', 'simple'];
     }
 
     if (parseMode === 'grobid') {
-      return ['grobid', 'sidecar', 'simple'];
-    }
-
-    if (parseMode === 'sidecar') {
-      return ['sidecar', 'grobid', 'simple'];
+      return ['grobid', 'simple'];
     }
 
     return ['simple'];
@@ -425,7 +429,8 @@ export class IngestionService {
 
     const response = await fetch(source.pdfUrl, {
       headers: {
-        accept: 'application/pdf,*/*'
+        accept: 'application/pdf,*/*',
+        'user-agent': 'ScholarMCP/1.0 (+https://github.com/lstudlo/ScholarMCP)'
       }
     });
 
@@ -434,8 +439,17 @@ export class IngestionService {
     }
 
     const bytes = await response.arrayBuffer();
+    const contentType = (response.headers.get('content-type') ?? '').toLowerCase();
+    const buffer = Buffer.from(bytes);
+    const looksLikePdf = buffer.length >= 4 && buffer.subarray(0, 4).toString('utf8') === '%PDF';
+    if (!contentType.includes('application/pdf') && !looksLikePdf) {
+      throw new IngestionError(
+        `Downloaded content is not a PDF (content-type: ${contentType || 'unknown'}).`
+      );
+    }
+
     const tempPath = resolve(tmpdir(), `scholar-mcp-${Date.now()}-${randomUUID()}.pdf`);
-    await fs.writeFile(tempPath, Buffer.from(bytes));
+    await fs.writeFile(tempPath, buffer);
 
     return {
       filePath: tempPath,
@@ -502,51 +516,94 @@ export class IngestionService {
     return parsed;
   }
 
-  private async parseWithSidecar(filePath: string): Promise<ParseOutput> {
-    if (!this.config.researchPythonSidecarUrl) {
-      throw new IngestionError('Python sidecar URL is not configured.');
+  private async resolvePdfUrlFromLandingPages(urls: Array<string | null | undefined>): Promise<string | null> {
+    const seen = new Set<string>();
+    for (const candidate of urls) {
+      if (!candidate) {
+        continue;
+      }
+
+      const normalized = candidate.trim();
+      if (!normalized || seen.has(normalized)) {
+        continue;
+      }
+      seen.add(normalized);
+
+      try {
+        const discovered = await this.resolvePdfUrlFromLandingPage(normalized);
+        if (discovered) {
+          return discovered;
+        }
+      } catch (error) {
+        this.logger.debug('Landing page PDF discovery failed', {
+          paperUrl: normalized,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
     }
 
-    const url = new URL('/parse', this.config.researchPythonSidecarUrl);
-    const response = await fetch(url, {
-      method: 'POST',
+    return null;
+  }
+
+  private async resolvePdfUrlFromLandingPage(paperUrl: string): Promise<string | null> {
+    const response = await fetch(paperUrl, {
       headers: {
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        filePath
-      })
+        accept: 'text/html,application/pdf,*/*',
+        'user-agent': 'ScholarMCP/1.0 (+https://github.com/lstudlo/ScholarMCP)'
+      }
     });
 
     if (!response.ok) {
-      throw new IngestionError(`Python sidecar returned HTTP ${response.status}`);
+      return null;
     }
 
-    const payload = (await response.json()) as {
-      parserName?: string;
-      parserVersion?: string;
-      confidence?: number;
-      title?: string | null;
-      abstract?: string | null;
-      fullText?: string;
-      sections?: SectionChunk[];
-      references?: ParsedReference[];
-    };
-
-    const fullText = normalizeWhitespace(payload.fullText ?? '');
-    if (!fullText) {
-      throw new IngestionError('Python sidecar returned empty full text.');
+    const finalUrl = response.url || paperUrl;
+    const contentType = (response.headers.get('content-type') ?? '').toLowerCase();
+    if (contentType.includes('application/pdf')) {
+      return finalUrl;
     }
 
-    return {
-      parserName: payload.parserName ?? 'python-sidecar',
-      parserVersion: payload.parserVersion ?? 'unknown',
-      confidence: payload.confidence ?? 0.74,
-      title: payload.title ?? null,
-      abstract: payload.abstract ?? null,
-      fullText,
-      sections: payload.sections ?? splitIntoSections(fullText),
-      references: payload.references ?? extractReferences(fullText)
-    };
+    const html = await response.text();
+    if (!html) {
+      return null;
+    }
+
+    const metaPatterns = [
+      /<meta[^>]+name=["']citation_pdf_url["'][^>]+content=["']([^"']+)["'][^>]*>/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']citation_pdf_url["'][^>]*>/i,
+      /<meta[^>]+property=["']og:pdf["'][^>]+content=["']([^"']+)["'][^>]*>/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:pdf["'][^>]*>/i
+    ];
+
+    for (const pattern of metaPatterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        const resolved = resolveUrlCandidate(match[1], finalUrl);
+        if (resolved) {
+          return resolved;
+        }
+      }
+    }
+
+    const linkPatterns = [
+      /<link[^>]+type=["']application\/pdf["'][^>]+href=["']([^"']+)["'][^>]*>/i,
+      /<link[^>]+href=["']([^"']+)["'][^>]+type=["']application\/pdf["'][^>]*>/i
+    ];
+    for (const pattern of linkPatterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        const resolved = resolveUrlCandidate(match[1], finalUrl);
+        if (resolved) {
+          return resolved;
+        }
+      }
+    }
+
+    const anchorMatch = html.match(PDF_LINK_REGEX);
+    if (anchorMatch?.[1]) {
+      return resolveUrlCandidate(anchorMatch[1], finalUrl);
+    }
+
+    return null;
   }
 }

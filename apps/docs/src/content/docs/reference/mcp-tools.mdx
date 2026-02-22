@@ -62,7 +62,7 @@ Get the status of a previously started ingest_paper_fulltext job.
 
 ## `ingest_paper_fulltext`
 
-Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a structured document using GROBID/sidecar/simple fallback pipeline.
+Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a structured document using GROBID/simple fallback pipeline.
 
 - **Title:** Ingest Full-Text Paper
 - **Annotations:** `{"readOnlyHint":false,"openWorldHint":true}`
@@ -73,7 +73,7 @@ Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a st
 | `paper_url` | string | No | - | Landing page URL for the paper. |
 | `pdf_url` | string | No | - | Direct PDF URL. |
 | `local_pdf_path` | string | No | - | Local absolute or workspace-relative PDF path. |
-| `parse_mode` | enum (auto, grobid, sidecar, simple) | Yes | 'auto' | - |
+| `parse_mode` | enum (auto, grobid, simple) | Yes | 'auto' | - |
 | `ocr_enabled` | boolean | Yes | true | Reserved for OCR-capable parser modes. |
 
 ## `search_google_scholar_advanced`

@@ -69,7 +69,6 @@ const envSchema = z.object({
   RESEARCH_ALLOW_REMOTE_PDFS: booleanFromEnv(true),
   RESEARCH_ALLOW_LOCAL_PDFS: booleanFromEnv(true),
   RESEARCH_GROBID_URL: z.string().url().optional(),
-  RESEARCH_PYTHON_SIDECAR_URL: z.string().url().optional(),
   RESEARCH_SEMANTIC_ENGINE: z.enum(['cloud-llm', 'none']).default('cloud-llm'),
   RESEARCH_CLOUD_MODEL: z.string().default('gpt-4.1-mini'),
   RESEARCH_GRAPH_CACHE_TTL_MS: numberFromEnv(5 * 60 * 1000, 0, 24 * 60 * 60 * 1000),
@@ -133,7 +132,6 @@ export interface AppConfig {
   researchAllowRemotePdfs: boolean;
   researchAllowLocalPdfs: boolean;
   researchGrobidUrl?: string;
-  researchPythonSidecarUrl?: string;
   researchSemanticEngine: 'cloud-llm' | 'none';
   researchCloudModel: string;
   researchGraphCacheTtlMs: number;
@@ -185,7 +183,6 @@ export const parseConfig = (overrides?: Partial<Record<keyof ParsedEnv, string |
     researchAllowRemotePdfs: env.RESEARCH_ALLOW_REMOTE_PDFS,
     researchAllowLocalPdfs: env.RESEARCH_ALLOW_LOCAL_PDFS,
     researchGrobidUrl: env.RESEARCH_GROBID_URL,
-    researchPythonSidecarUrl: env.RESEARCH_PYTHON_SIDECAR_URL,
     researchSemanticEngine: env.RESEARCH_SEMANTIC_ENGINE,
     researchCloudModel: env.RESEARCH_CLOUD_MODEL,
     researchGraphCacheTtlMs: env.RESEARCH_GRAPH_CACHE_TTL_MS,
