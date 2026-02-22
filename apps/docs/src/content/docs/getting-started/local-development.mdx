@@ -1,21 +1,45 @@
 ---
 title: Local Development
-description: Run and validate docs locally.
+description: Run ScholarMCP from source and verify changes.
 sidebar:
-  order: 2
+  order: 4
 ---
 
 ## Prerequisites
 
-- Node.js >= 20
+- Node.js `>=20`
 - pnpm
 
-## Commands
+## Setup
 
 ```bash
-pnpm docs-old:dev
-pnpm docs-old:check
-pnpm docs-old:build
+pnpm install
 ```
 
-`docs:dev` and `docs:build` regenerate API/reference artifacts before running Astro.
+## Run from Source
+
+Stdio mode:
+
+```bash
+pnpm dev:stdio
+```
+
+HTTP mode:
+
+```bash
+pnpm dev:http
+```
+
+## Verify
+
+Type check package:
+
+```bash
+pnpm check
+```
+
+Run tests:
+
+```bash
+pnpm test
+```

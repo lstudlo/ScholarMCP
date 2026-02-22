@@ -11,7 +11,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'ScholarMCP Documentation',
-      description: 'Documentation for ScholarMCP tools, architecture, and operations.',
+      description: 'Official documentation for installing, configuring, and using ScholarMCP.',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/lstudlo/ScolarMCP' }],
       editLink: {
         baseUrl: 'https://github.com/lstudlo/ScolarMCP/edit/main/apps/docs/'
@@ -22,7 +22,7 @@ export default defineConfig({
           autogenerate: { directory: 'getting-started' }
         },
         {
-          label: 'Guides',
+          label: 'Usage Guides',
           autogenerate: { directory: 'guides' }
         },
         {

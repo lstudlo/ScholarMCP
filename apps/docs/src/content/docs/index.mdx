@@ -1,11 +1,28 @@
 ---
 title: ScholarMCP Documentation
-description: Practical docs for integrating and operating ScholarMCP.
+description: Install, configure, and run ScholarMCP for research workflows in MCP-compatible agents.
+template: splash
+hero:
+  tagline: MCP server for literature research workflows.
+  actions:
+    - text: Quick Start
+      link: /getting-started/quick-start/
+      icon: right-arrow
+    - text: Configuration
+      link: /reference/configuration/
+      variant: minimal
 ---
 
-## What This Site Covers
+ScholarMCP lets your coding agent run real literature workflows directly from chat:
 
-- Setup and local development
-- Tool-level MCP reference generated from source-of-truth server code
-- Cloudflare Pages deployment workflow for this repository
-- Release notes generated from Git tags
+- Search papers across Google Scholar, OpenAlex, Crossref, and Semantic Scholar
+- Ingest and parse full-text PDFs from DOI, URLs, or local files
+- Extract claims, methods, datasets, and limitations from parsed documents
+- Build references and validate manuscript citations
+
+## Start Here
+
+- New users: [/getting-started/quick-start/](/getting-started/quick-start/)
+- Agent setup (Claude/Codex/generic MCP): [/getting-started/client-setup/](/getting-started/client-setup/)
+- Practical usage patterns: [/guides/research-workflows/](/guides/research-workflows/)
+- Full env/CLI reference: [/reference/configuration/](/reference/configuration/) and [/reference/cli/](/reference/cli/)

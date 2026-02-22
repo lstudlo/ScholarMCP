@@ -1,17 +1,30 @@
 ---
 title: Overview
-description: What ScholarMCP provides and how this docs site is structured.
+description: What ScholarMCP is and what capabilities it provides.
 sidebar:
   order: 1
 ---
 
-ScholarMCP is an MCP server for literature research workflows, shipping tools for search, ingestion, extraction, citation suggestion, bibliography generation, and citation validation.
+ScholarMCP is an MCP server that exposes literature-research tooling to MCP-compatible clients.
 
-This docs site is integrated into the same repository as source code so API docs and release notes can be generated from the same commit history and codebase.
+## Core Capabilities
 
-## Repository Integration Model
+- Federated paper search across OpenAlex, Crossref, Semantic Scholar, and optional Scholar scraping
+- Google Scholar keyword and advanced search flows
+- Author profile lookup on Google Scholar
+- Full-text ingestion pipeline with parser fallbacks (`grobid -> sidecar -> simple`)
+- Structured extraction for claims, methods, datasets, metrics, and references
+- Citation recommendation, bibliography generation, and citation validation
 
-- Source package lives in `packages/scholar-mcp`
-- Docs app lives in `apps/docs`
-- API reference is generated from `packages/scholar-mcp/src/mcp/create-scholar-mcp-server.ts`
-- Release notes are generated from git tags
+## Runtime Modes
+
+- `stdio` (recommended): launched by your MCP client as a local process
+- `http`: persistent server with MCP endpoint and health route
+- `both`: run stdio + HTTP at the same time
+
+## Typical Workflow
+
+1. Search for relevant literature
+2. Ingest and parse target papers
+3. Extract structured findings from parsed documents
+4. Generate references and validate manuscript citations

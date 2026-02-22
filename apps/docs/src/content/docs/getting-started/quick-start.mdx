@@ -1,0 +1,51 @@
+---
+title: Quick Start
+description: Install ScholarMCP and run it in minutes.
+sidebar:
+  order: 2
+---
+
+## Prerequisites
+
+- Node.js `>=20`
+- npm
+
+## Install
+
+Global install:
+
+```bash
+npm install -g scholar-mcp
+```
+
+One-off run without global install:
+
+```bash
+npx -y scholar-mcp --transport=stdio
+```
+
+## Run ScholarMCP
+
+Start in `stdio` mode (recommended for MCP clients):
+
+```bash
+scholar-mcp --transport=stdio
+```
+
+Start in `http` mode:
+
+```bash
+scholar-mcp --transport=http
+```
+
+Check HTTP health endpoint:
+
+```bash
+curl http://127.0.0.1:3000/health
+```
+
+## First Useful Prompt
+
+After attaching ScholarMCP to your MCP client:
+
+> Find 10 recent papers on retrieval-augmented generation and summarize methods and datasets.

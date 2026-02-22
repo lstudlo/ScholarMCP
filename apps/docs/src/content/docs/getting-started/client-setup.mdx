@@ -1,0 +1,67 @@
+---
+title: Client Setup
+description: Connect ScholarMCP to Claude Code, Codex, and generic MCP clients.
+sidebar:
+  order: 3
+---
+
+## Claude Code
+
+Using globally installed binary:
+
+```bash
+claude mcp add -s user \
+  -e SCHOLAR_MCP_TRANSPORT=stdio \
+  -e SCHOLAR_REQUEST_DELAY_MS=350 \
+  -e RESEARCH_ALLOW_REMOTE_PDFS=true \
+  -e RESEARCH_ALLOW_LOCAL_PDFS=true \
+  -- scholar_mcp scholar-mcp --transport=stdio
+```
+
+Using `npx`:
+
+```bash
+claude mcp add -s user \
+  -e SCHOLAR_MCP_TRANSPORT=stdio \
+  -e SCHOLAR_REQUEST_DELAY_MS=350 \
+  -e RESEARCH_ALLOW_REMOTE_PDFS=true \
+  -e RESEARCH_ALLOW_LOCAL_PDFS=true \
+  -- scholar_mcp npx -y scholar-mcp --transport=stdio
+```
+
+Check status:
+
+```bash
+claude mcp get scholar_mcp
+```
+
+Important: keep the `--` before `scholar_mcp` when using multiple `-e` flags.
+
+## OpenAI Codex App
+
+Add to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.scholar_mcp]
+command = "npx"
+args = ["-y", "scholar-mcp", "--transport=stdio"]
+
+[mcp_servers.scholar_mcp.env]
+SCHOLAR_MCP_TRANSPORT = "stdio"
+SCHOLAR_REQUEST_DELAY_MS = "350"
+RESEARCH_ALLOW_REMOTE_PDFS = "true"
+RESEARCH_ALLOW_LOCAL_PDFS = "true"
+```
+
+## Generic MCP Clients
+
+Use one of the following:
+
+- `scholar-mcp --transport=stdio`
+- `npx -y scholar-mcp --transport=stdio`
+
+For HTTP mode:
+
+1. Start server with `SCHOLAR_MCP_TRANSPORT=http scholar-mcp`
+2. Connect MCP client to `http://127.0.0.1:3000/mcp`
+3. Optionally set `SCHOLAR_MCP_API_KEY` and send bearer token from client
