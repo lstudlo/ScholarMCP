@@ -1,7 +1,8 @@
 {
   "name": "scholar-mcp",
   "version": "1.0.0",
-  "description": "Google Scholar MCP server built with Hono.js and Node.js",
+  "description": "MCP Server for researchers",
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -15,14 +16,19 @@
     "dev": "tsx watch src/index.ts",
     "dev:http": "tsx watch src/index.ts --transport=http",
     "dev:stdio": "tsx watch src/index.ts --transport=stdio",
-    "build": "tsc -p tsconfig.json",4
+    "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "prepack": "npm run build && node scripts/prepare-package.mjs",
     "pack:dry-run": "npm pack --dry-run",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "pack": "npm run pack:dry-run && npm pack",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "release:preflight": "npm run check && npm run test && npm run pack:dry-run",
+    "release:publish": "npm publish",
+    "release:patch": "npm run release:preflight && npm version patch && npm run release:publish && git push --follow-tags",
+    "release:minor": "npm run release:preflight && npm version minor && npm run release:publish && git push --follow-tags",
+    "release:major": "npm run release:preflight && npm version major && npm run release:publish && git push --follow-tags"
   },
   "engines": {
     "node": ">=20"

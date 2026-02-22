@@ -1,5 +1,11 @@
 # ScholarMCP
 
+[![npm](https://img.shields.io/npm/v/scholar-mcp)](https://www.npmjs.com/package/scholar-mcp)
+[![latest commit](https://img.shields.io/github/last-commit/lstudlo/ScolarMCP)](https://github.com/lstudlo/ScolarMCP/commits/main)
+[![license](https://img.shields.io/github/license/lstudlo/ScolarMCP)](https://github.com/lstudlo/ScolarMCP/blob/main/LICENSE)
+[![minified](https://img.shields.io/bundlephobia/min/scholar-mcp)](https://bundlephobia.com/package/scholar-mcp)
+[![minzipped](https://img.shields.io/bundlephobia/minzip/scholar-mcp)](https://bundlephobia.com/package/scholar-mcp)
+
 ScholarMCP is an MCP server for literature research workflows in coding agents.
 
 It gives your agent tools to:
