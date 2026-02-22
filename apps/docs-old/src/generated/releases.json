@@ -1,0 +1,25 @@
+{
+  "currentVersion": "1.0.4",
+  "generatedFrom": "git tags",
+  "releaseCount": 3,
+  "releases": [
+    {
+      "tag": "v1.0.3",
+      "date": "2026-02-22",
+      "subject": "1.0.3",
+      "url": "https://github.com/lstudlo/ScolarMCP/releases/tag/v1.0.3"
+    },
+    {
+      "tag": "v1.0.2",
+      "date": "2026-02-22",
+      "subject": "1.0.2",
+      "url": "https://github.com/lstudlo/ScolarMCP/releases/tag/v1.0.2"
+    },
+    {
+      "tag": "v1.0.1",
+      "date": "2026-02-22",
+      "subject": "1.0.1",
+      "url": "https://github.com/lstudlo/ScolarMCP/releases/tag/v1.0.1"
+    }
+  ]
+}
