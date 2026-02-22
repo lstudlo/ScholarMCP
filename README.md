@@ -236,18 +236,19 @@ Generation source inputs:
 - Release metadata: git tags in this repository
 
 Cloudflare Pages target settings:
-- Build command: `pnpm install --frozen-lockfile && pnpm --dir apps/docs build`
+- Root directory: `/`
+- Build command: `pnpm install --frozen-lockfile && pnpm docs:build`
 - Build output directory: `apps/docs/dist`
 - Production branch: `main`
 - Canonical docs URL: `https://scholar-mcp.lstudlo.com/`
 
-Automatic deployment on every push is configured via GitHub Actions:
-- Workflow: `.github/workflows/docs-deploy-pages.yml`
-- Push to `main`: production deploy
-- Push to any other branch: preview deploy for that branch
-- Required GitHub repository secrets:
-  - `CLOUDFLARE_ACCOUNT_ID`
-  - `CLOUDFLARE_API_TOKEN`
+Automatic deployment is configured via Cloudflare Pages Git integration:
+- Cloudflare dashboard path: `Workers & Pages` -> your project -> `Settings` -> `Builds` -> `Git repository`
+- Ensure repo access is granted in the Cloudflare GitHub app installation
+- Configure branch controls in `Settings` -> `Builds` -> `Branch control`
+  - Production branch: `main`
+  - Preview branches: `All non-production branches` (or custom include/exclude)
+- Build skip flags in commit message disable auto deploy (`[CI Skip]`, `[CI-Skip]`, `[Skip CI]`, `[Skip-CI]`, `[CF-Pages-Skip]`)
 
 ## Publish Workflow
 
