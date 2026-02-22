@@ -1,0 +1,45 @@
+---
+title: Research Workflows
+description: End-to-end ScholarMCP workflows for literature review and manuscript support.
+sidebar:
+  order: 1
+---
+
+## Workflow 1: Literature Review Sweep
+
+1. Run `search_literature_graph` with a focused query and year range.
+2. Refine with `sources` and `fields_of_study` if result quality is mixed.
+3. Use `search_google_scholar_advanced` when you need stricter author/year/phrase filtering.
+4. Save shortlisted papers for ingestion.
+
+Prompt example:
+
+> Find 15 papers from 2022-2026 on retrieval-augmented generation evaluation methods. Prioritize benchmark-heavy studies.
+
+## Workflow 2: Full-Text Extraction Pipeline
+
+1. Start ingestion with `ingest_paper_fulltext` using DOI, paper URL, direct PDF URL, or local PDF path.
+2. Poll with `get_ingestion_status` until `succeeded`.
+3. Extract structured outputs with `extract_granular_paper_details`.
+4. Use extracted claims, methods, and limitations in your notes or draft.
+
+Prompt example:
+
+> Ingest DOI `10.1038/s41467-024-55563-6`, wait until complete, then extract methods, datasets, and limitations.
+
+## Workflow 3: Citation Support for Drafts
+
+1. Feed manuscript text into `suggest_contextual_citations`.
+2. Generate formatted references via `build_reference_list`.
+3. Validate inline citations and references using `validate_manuscript_citations`.
+4. Iterate until missing/duplicate citation issues are resolved.
+
+Prompt example:
+
+> Suggest citations for this draft section in IEEE style, then build BibTeX and validate consistency.
+
+## Workflow 4: Author-Centric Discovery
+
+1. Use `get_author_info` to resolve the author and top publications.
+2. Expand from those publications using `search_literature_graph`.
+3. Ingest the highest-value papers and extract structured summaries.

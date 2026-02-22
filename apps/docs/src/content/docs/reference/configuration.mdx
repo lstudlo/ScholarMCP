@@ -1,0 +1,86 @@
+---
+title: Configuration
+description: Environment variables and runtime behavior for ScholarMCP.
+sidebar:
+  order: 2
+---
+
+ScholarMCP reads configuration from environment variables (and automatically loads `.env` in the current working directory at startup).
+
+Boolean values accept `true/false`, `1/0`, `yes/no`, and `on/off`.
+
+## Core Runtime
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `NODE_ENV` | `development` | Runtime environment (`development`, `test`, `production`). |
+| `LOG_LEVEL` | `info` | Log verbosity (`debug`, `info`, `warn`, `error`). |
+| `SCHOLAR_MCP_SERVER_NAME` | `scholar-mcp` | MCP server identity name. |
+| `SCHOLAR_MCP_SERVER_VERSION` | package version | MCP server version reported to clients. |
+| `SCHOLAR_MCP_TRANSPORT` | `stdio` | Transport mode: `stdio`, `http`, or `both`. |
+
+## HTTP Server
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `SCHOLAR_MCP_HOST` | `127.0.0.1` | HTTP bind host. |
+| `SCHOLAR_MCP_PORT` | `3000` | HTTP bind port. |
+| `SCHOLAR_MCP_ENDPOINT_PATH` | `/mcp` | MCP HTTP endpoint path. |
+| `SCHOLAR_MCP_HEALTH_PATH` | `/health` | Health check endpoint path. |
+| `SCHOLAR_MCP_HTTP_SESSION_MODE` | `stateful` | HTTP session mode: `stateful` or `stateless`. |
+| `SCHOLAR_MCP_HTTP_SESSION_TTL_MS` | `1800000` | Stateful session time-to-live in milliseconds. |
+| `SCHOLAR_MCP_HTTP_MAX_SESSIONS` | `200` | Maximum concurrent HTTP sessions. |
+
+## Security and Access Control
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `SCHOLAR_MCP_API_KEY` | unset | If set, requires `Authorization: Bearer <key>` for HTTP requests. |
+| `SCHOLAR_MCP_ALLOWED_ORIGINS` | unset | Comma-separated CORS allow-list for origins. |
+| `SCHOLAR_MCP_ALLOWED_HOSTS` | unset | Comma-separated host header allow-list. |
+
+## Google Scholar Tuning
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `SCHOLAR_BASE_URL` | `https://scholar.google.com` | Scholar base URL. |
+| `SCHOLAR_LANGUAGE` | `en` | Scholar language code used by search calls. |
+| `SCHOLAR_TIMEOUT_MS` | `15000` | Request timeout for Scholar calls. |
+| `SCHOLAR_RETRY_ATTEMPTS` | `2` | Retry count for Scholar requests. |
+| `SCHOLAR_RETRY_DELAY_MS` | `800` | Base retry delay for Scholar requests. |
+| `SCHOLAR_REQUEST_DELAY_MS` | `250` | Inter-request pacing delay for Scholar traffic. |
+| `SCHOLAR_MAX_RESULTS_PER_REQUEST` | `20` | Maximum results fetched per Scholar request. |
+
+## Federated Research Providers
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `RESEARCH_OPENALEX_BASE_URL` | `https://api.openalex.org` | OpenAlex API base URL. |
+| `RESEARCH_OPENALEX_API_KEY` | unset | Optional OpenAlex API key. |
+| `RESEARCH_CROSSREF_BASE_URL` | `https://api.crossref.org` | Crossref API base URL. |
+| `RESEARCH_SEMANTIC_SCHOLAR_BASE_URL` | `https://api.semanticscholar.org/graph/v1` | Semantic Scholar API base URL. |
+| `RESEARCH_SEMANTIC_SCHOLAR_API_KEY` | unset | Optional Semantic Scholar API key. |
+| `RESEARCH_TIMEOUT_MS` | `20000` | Timeout for federated research HTTP requests. |
+| `RESEARCH_RETRY_ATTEMPTS` | `2` | Retry count for federated requests. |
+| `RESEARCH_RETRY_DELAY_MS` | `800` | Base retry delay for federated requests. |
+| `RESEARCH_REQUEST_DELAY_MS` | `100` | Inter-request pacing for federated providers. |
+
+## Full-Text Ingestion
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `RESEARCH_ALLOW_REMOTE_PDFS` | `true` | Allows remote PDF download ingestion. |
+| `RESEARCH_ALLOW_LOCAL_PDFS` | `true` | Allows local PDF path ingestion. |
+| `RESEARCH_GROBID_URL` | unset | Optional GROBID endpoint URL. |
+| `RESEARCH_PYTHON_SIDECAR_URL` | unset | Optional Python sidecar endpoint URL. |
+
+## Extraction and Graph Ranking
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `RESEARCH_SEMANTIC_ENGINE` | `cloud-llm` | Extraction engine mode (`cloud-llm` or `none`). |
+| `RESEARCH_CLOUD_MODEL` | `gpt-4.1-mini` | Model name used by cloud extraction engine. |
+| `RESEARCH_GRAPH_CACHE_TTL_MS` | `300000` | Literature graph cache TTL in milliseconds. |
+| `RESEARCH_GRAPH_MAX_CACHE_ENTRIES` | `300` | Maximum cached graph entries. |
+| `RESEARCH_GRAPH_PROVIDER_RESULT_MULTIPLIER` | `2` | Per-provider over-fetch multiplier before merge/ranking. |
+| `RESEARCH_GRAPH_FUZZY_TITLE_THRESHOLD` | `0.84` | Fuzzy title dedupe threshold for merged works. |

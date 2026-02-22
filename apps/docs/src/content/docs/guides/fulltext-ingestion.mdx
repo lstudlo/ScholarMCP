@@ -1,0 +1,53 @@
+---
+title: Full-Text Ingestion
+description: Configure and troubleshoot full-text ingestion for ScholarMCP.
+sidebar:
+  order: 2
+---
+
+## Input Priority
+
+`ingest_paper_fulltext` accepts any of:
+
+- `doi`
+- `paper_url`
+- `pdf_url`
+- `local_pdf_path`
+
+You must pass at least one.
+
+## Parse Modes
+
+- `auto` (default): tries parser fallback chain
+- `grobid`: force GROBID path
+- `sidecar`: force Python sidecar path
+- `simple`: force basic parsing fallback
+
+## Optional Sidecar Setup
+
+Start sidecar service:
+
+```bash
+cd services/python-sidecar
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app:app --host 127.0.0.1 --port 8090
+```
+
+Set ScholarMCP env:
+
+```bash
+RESEARCH_PYTHON_SIDECAR_URL=http://127.0.0.1:8090
+```
+
+## Common Failure Cases
+
+- DOI page has no downloadable PDF URL:
+  - retry with `pdf_url` or `local_pdf_path`
+- Remote downloads disabled:
+  - set `RESEARCH_ALLOW_REMOTE_PDFS=true`
+- Local ingestion disabled:
+  - set `RESEARCH_ALLOW_LOCAL_PDFS=true`
+- Throttling or timeout pressure:
+  - increase `SCHOLAR_REQUEST_DELAY_MS` and/or `RESEARCH_TIMEOUT_MS`

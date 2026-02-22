@@ -1,0 +1,49 @@
+---
+title: Troubleshooting
+description: Common ScholarMCP setup and runtime issues.
+sidebar:
+  order: 4
+---
+
+## `claude mcp add` Fails with `Invalid environment variable format`
+
+Cause: missing separator before server name when passing multiple `-e` values.
+
+Fix: include `--` before the MCP server alias.
+
+## DOI Ingestion Fails to Resolve a PDF
+
+Error pattern: unable to resolve downloadable PDF URL.
+
+Fix options:
+
+- provide `pdf_url` directly
+- provide `local_pdf_path`
+- verify DOI landing page actually exposes a downloadable PDF
+
+## Scholar Requests Are Being Throttled
+
+Symptoms: intermittent empty results, repeated failures, or slow retries.
+
+Fix options:
+
+- increase `SCHOLAR_REQUEST_DELAY_MS` (for example `500` to `1000`)
+- reduce request frequency in your prompts
+- avoid bursty query patterns
+
+## HTTP Clients Cannot Connect
+
+Checklist:
+
+- verify server is running in HTTP mode (`--transport=http` or env)
+- verify endpoint URL matches `http://<host>:<port><endpointPath>`
+- check `SCHOLAR_MCP_ALLOWED_HOSTS` and `SCHOLAR_MCP_ALLOWED_ORIGINS`
+- if `SCHOLAR_MCP_API_KEY` is set, send `Authorization: Bearer <key>`
+
+## Ingestion Fails for Local Files
+
+Checklist:
+
+- set `RESEARCH_ALLOW_LOCAL_PDFS=true`
+- verify the file path exists and is readable by the process
+- use absolute paths when possible
