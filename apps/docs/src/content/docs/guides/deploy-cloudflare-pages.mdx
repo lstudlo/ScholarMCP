@@ -13,14 +13,16 @@ Configure the Cloudflare build settings as follows:
 
 - Path: `apps/docs` (no leading slash)
 - Build command: `pnpm install --frozen-lockfile && pnpm build`
-- Deploy command: `pnpm run cf:pages:deploy`
-- Non-production branch deploy command: `pnpm run cf:pages:deploy:preview`
+- Deploy command: `pnpm run cf:pages:deploy:ci`
+- Non-production branch deploy command: `pnpm run cf:pages:deploy:preview:ci`
 - Production branch: `main`
 
 The deploy commands above call repo-managed scripts in `apps/docs/package.json`:
 
 - `cf:pages:deploy`: `wrangler pages deploy ./dist --project-name scholar-mcp-docs`
 - `cf:pages:deploy:preview`: `wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}`
+- `cf:pages:deploy:ci`: `env -u CLOUDFLARE_API_TOKEN wrangler pages deploy ./dist --project-name scholar-mcp-docs`
+- `cf:pages:deploy:preview:ci`: `env -u CLOUDFLARE_API_TOKEN wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}`
 
 ## Authentication (Important)
 
@@ -28,6 +30,7 @@ If builds fail with `Authentication error [code: 10000]`, check environment vari
 
 - Best practice: do **not** set `CLOUDFLARE_API_TOKEN` in Workers Builds unless you need a custom token. Let Cloudflare use the default build token.
 - If you do use a custom token, it must include Cloudflare Pages edit/write permission for the target account.
+- This repo's `:ci` deploy scripts explicitly unset `CLOUDFLARE_API_TOKEN` to avoid accidental use of a mis-scoped token.
 
 ## Pages Project Settings
 

@@ -12,7 +12,9 @@
     "check": "pnpm run sync:generated && astro check",
     "preview": "astro preview",
     "cf:pages:deploy": "wrangler pages deploy ./dist --project-name scholar-mcp-docs",
-    "cf:pages:deploy:preview": "wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}"
+    "cf:pages:deploy:preview": "wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}",
+    "cf:pages:deploy:ci": "env -u CLOUDFLARE_API_TOKEN wrangler pages deploy ./dist --project-name scholar-mcp-docs",
+    "cf:pages:deploy:preview:ci": "env -u CLOUDFLARE_API_TOKEN wrangler pages deploy ./dist --project-name scholar-mcp-docs --branch ${WORKERS_CI_BRANCH:-preview}"
   },
   "dependencies": {
     "@astrojs/starlight": "latest",
