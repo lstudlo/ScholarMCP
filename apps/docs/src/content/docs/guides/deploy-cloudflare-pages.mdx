@@ -55,7 +55,7 @@ Recommended include paths:
 ## Local Preview and Deploy via Wrangler
 
 ```bash
-cd apps/docs
+cd apps/docs-old
 pnpm run build
 npx wrangler pages dev ./dist
 ```
@@ -63,7 +63,7 @@ npx wrangler pages dev ./dist
 Production deploy from local machine:
 
 ```bash
-cd apps/docs
+cd apps/docs-old
 pnpm run build
 pnpm run cf:pages:deploy
 ```
@@ -71,7 +71,7 @@ pnpm run cf:pages:deploy
 Preview deploy from local machine:
 
 ```bash
-cd apps/docs
+cd apps/docs-old
 pnpm run build
 WORKERS_CI_BRANCH=preview pnpm run cf:pages:deploy:preview
 ```
