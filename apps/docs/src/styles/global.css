@@ -7,17 +7,17 @@
 /* Force exact page/chrome background colors per mode. */
 :root {
   /* Accent color palette used by Starlight/Tailwind UI */
-  --color-accent-50: #eff6ff;
-  --color-accent-100: #dbeafe;
-  --color-accent-200: #bfdbfe;
-  --color-accent-300: #93c5fd;
-  --color-accent-400: #60a5fa;
-  --color-accent-500: #3b82f6;
-  --color-accent-600: #2563eb;
-  --color-accent-700: #1d4ed8;
-  --color-accent-800: #1e40af;
-  --color-accent-900: #1e3a8a;
-  --color-accent-950: #172554;
+  --color-accent-50: #f9f9f9;
+  --color-accent-100: #f2f2f2;
+  --color-accent-200: #e5e5e5;
+  --color-accent-300: #d4d4d4;
+  --color-accent-400: #a3a3a3;
+  --color-accent-500: #737373;
+  --color-accent-600: #525252;
+  --color-accent-700: #404040;
+  --color-accent-800: #262626;
+  --color-accent-900: #171717;
+  --color-accent-950: #0a0a0a;
 
   /* Full typography scale */
   --sl-text-2xs: 0.75rem;
@@ -43,13 +43,71 @@
   --sl-text-h4: var(--sl-text-xl);
   --sl-text-h5: var(--sl-text-lg);
 
+  /* Force semantic/UI colors to grayscale in light mode */
+  --sl-color-accent-low: #e5e5e5;
+  --sl-color-accent: #525252;
+  --sl-color-accent-high: #262626;
+  --sl-color-text-accent: var(--sl-color-accent);
+  --sl-color-orange-low: #f2f2f2;
+  --sl-color-orange: #737373;
+  --sl-color-orange-high: #171717;
+  --sl-color-green-low: #f2f2f2;
+  --sl-color-green: #737373;
+  --sl-color-green-high: #171717;
+  --sl-color-blue-low: #f2f2f2;
+  --sl-color-blue: #737373;
+  --sl-color-blue-high: #171717;
+  --sl-color-purple-low: #f2f2f2;
+  --sl-color-purple: #737373;
+  --sl-color-purple-high: #171717;
+  --sl-color-red-low: #f2f2f2;
+  --sl-color-red: #737373;
+  --sl-color-red-high: #171717;
+
   --sl-color-bg: #ffffff;
   --sl-color-bg-nav: #ffffff;
   --sl-color-bg-sidebar: #ffffff;
+
+  /* Code block colors (light) */
+  --ec-codeFg: #1f1f1f;
+  --ec-codeBg: #f5f5f5;
+  --ec-gtrFg: #6b6b6b;
 }
 
 :root[data-theme='dark'] {
+  /* Force semantic/UI colors to grayscale in dark mode */
+  --sl-color-accent-low: #262626;
+  --sl-color-accent: #d4d4d4;
+  --sl-color-accent-high: #fafafa;
+  --sl-color-text-accent: var(--sl-color-accent);
+  --sl-color-orange-low: #141414;
+  --sl-color-orange: #a3a3a3;
+  --sl-color-orange-high: #f5f5f5;
+  --sl-color-green-low: #141414;
+  --sl-color-green: #a3a3a3;
+  --sl-color-green-high: #f5f5f5;
+  --sl-color-blue-low: #141414;
+  --sl-color-blue: #a3a3a3;
+  --sl-color-blue-high: #f5f5f5;
+  --sl-color-purple-low: #141414;
+  --sl-color-purple: #a3a3a3;
+  --sl-color-purple-high: #f5f5f5;
+  --sl-color-red-low: #141414;
+  --sl-color-red: #a3a3a3;
+  --sl-color-red-high: #f5f5f5;
+
   --sl-color-bg: #000000;
   --sl-color-bg-nav: #000000;
   --sl-color-bg-sidebar: #000000;
+
+  /* Code block colors (dark) */
+  --ec-codeFg: #e5e5e5;
+  --ec-codeBg: #111111;
+  --ec-gtrFg: #9a9a9a;
+}
+
+/* Force syntax highlighting tokens in fenced code blocks to monochrome. */
+.expressive-code .ec-line :where(span[style^='--']:not([class])) {
+  color: var(--ec-codeFg);
+  background-color: transparent;
 }
