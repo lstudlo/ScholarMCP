@@ -9,23 +9,21 @@
 ScholarMCP is an MCP server for literature research workflows in coding agents.
 Official documentation: https://scholar-mcp.lstudlo.com/
 
-It gives your agent tools to:
+### Early Development Notice
+
+This project is still in early development, and rough edges or bugs may occur.
+If you run into a problem, please open an issue with steps to reproduce it.
+
+### ScholarMCP gives your agent tools to:
 - search papers across multiple sources
 - ingest and parse full-text PDFs
 - extract structured paper details
 - suggest citations and build references
 - validate manuscript citations
 
-## Who this is for
+### ScholarMCP is for...
 
 Use this if you want Claude Code, Codex, or any MCP-compatible coding agent to run research tasks directly from chat.
-
-## What you get
-
-- Transports: `stdio` (recommended) and HTTP (`/mcp`)
-- Research providers: Google Scholar, OpenAlex, Crossref, Semantic Scholar
-- Full-text parsing pipeline: `grobid -> simple`
-- Tooling for thesis/paper workflows: ingestion, extraction, references, validation
 
 ## Quick Start
 
