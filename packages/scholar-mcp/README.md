@@ -84,7 +84,7 @@ claude mcp add -s user \
   -e SCHOLAR_REQUEST_DELAY_MS=350 \
   -e RESEARCH_ALLOW_REMOTE_PDFS=true \
   -e RESEARCH_ALLOW_LOCAL_PDFS=true \
-  -- scholar_mcp scholar-mcp --transport=stdio
+  -- scholar-mcp scholar-mcp --transport=stdio
 ```
 
 Register without global install:
