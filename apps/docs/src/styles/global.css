@@ -3,9 +3,12 @@
 @import '@astrojs/starlight-tailwind';
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
 
 /* Force exact page/chrome background colors per mode. */
 :root {
+  --sl-font: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+
   /* Accent color palette used by Starlight/Tailwind UI */
   --color-accent-50: #f9f9f9;
   --color-accent-100: #f2f2f2;
