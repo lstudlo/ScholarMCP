@@ -29,7 +29,7 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
   </div>
 
   <header class="sticky top-0 z-20 bg-white/75 backdrop-blur-xl dark:bg-black/70">
-    <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-7 py-4 md:px-9">
+    <div class="mx-auto flex w-full items-center justify-between gap-4 px-7 h-16 md:px-9">
       <a href="/" class="group min-w-0 no-underline">
         <div class="flex items-center gap-2 sm:gap-3 group-hover:opacity-80">
           <div class="font-serif text-xl leading-none tracking-tight sm:text-2xl">ScholarMCP</div>
@@ -60,14 +60,12 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
     </div>
   </header>
 
-  <main class="relative z-10 mx-auto w-full max-w-7xl px-6 pb-6 pt-4 sm:py-10 md:px-8">
+  <main class="relative z-10 mx-auto w-full px-6 pb-6 pt-4 sm:py-10 md:px-8">
     <div class:list={['grid gap-4 lg:gap-6', isHome ? 'xl:grid-cols-[minmax(0,1fr)]' : 'xl:grid-cols-[18.5rem_minmax(0,1fr)_17rem] xl:items-start']}>
       {!isHome && (
         <aside class="hidden xl:block">
           <div class="sticky top-24 rounded-3xl border border-zinc-200/80 bg-white/75 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
             <p class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">Documentation</p>
-            <h2 class="mt-1 font-serif text-2xl tracking-tight">Browse Pages</h2>
-            <p class="mt-4 text-sm leading-6 text-zinc-600 dark:text-zinc-300">ScholarMCP Documentation</p>
             <div class="mt-4">
               <SidebarNav items={sidebar} />
             </div>
