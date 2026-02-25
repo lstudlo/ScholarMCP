@@ -42,9 +42,12 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
         <button
           type="button"
           data-open-search
-          class="hidden rounded-full border border-zinc-300/80 px-3 py-1.5 text-xs tracking-[0.16em] uppercase hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900 sm:inline-flex"
+          class="inline-flex items-center gap-2 rounded-full border border-zinc-300/80 px-3 py-1.5 text-xs tracking-[0.16em] uppercase hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+          aria-haspopup="dialog"
+          aria-controls="docs-search-modal"
         >
-          Search
+          <span>Search</span>
+          <span class="hidden rounded-full border border-zinc-300/80 px-1.5 py-0.5 text-[10px] tracking-[0.12em] text-zinc-500 sm:inline dark:border-zinc-700">⌘K</span>
         </button>
         <a
           href="https://github.com/lstudlo/ScholarMCP"
@@ -102,4 +105,303 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
       )}
     </div>
   </main>
+
+  <dialog
+    id="docs-search-modal"
+    data-search-modal
+    class="w-[min(42rem,calc(100vw-1.5rem))] max-w-none rounded-3xl border border-zinc-200/80 bg-white/95 p-0 text-zinc-950 shadow-2xl backdrop:bg-black/35 backdrop:backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95 dark:text-zinc-100"
+    aria-label="Search documentation"
+  >
+    <div class="border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">
+      <div class="flex items-center gap-3">
+        <svg viewBox="0 0 20 20" fill="none" class="size-4 text-zinc-500" aria-hidden="true">
+          <path d="M14 14l4 4M8.5 15A6.5 6.5 0 108.5 2a6.5 6.5 0 000 13z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <input
+          data-search-input
+          type="search"
+          placeholder="Search docs, guides, and reference pages..."
+          class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-zinc-500"
+          autocomplete="off"
+        />
+        <button
+          type="button"
+          data-close-search
+          class="shrink-0 rounded-full border border-zinc-300/80 px-2.5 py-1 text-[11px] tracking-[0.14em] uppercase hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+        >
+          Esc
+        </button>
+      </div>
+    </div>
+
+    <div class="px-4 py-3">
+      <p data-search-status class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">
+        Start typing to search
+      </p>
+      <div data-search-results class="mt-3 max-h-[60vh] overflow-auto"></div>
+    </div>
+  </dialog>
 </div>
+
+<script is:inline>
+  (() => {
+    const SEARCH_ENDPOINT = '/search-index.json';
+
+    let records = null;
+    let loadingPromise = null;
+
+    const escapeHtml = (value) =>
+      value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+
+    const tokenize = (value) =>
+      value
+        .toLowerCase()
+        .split(/[\s/_.-]+/)
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+    const scoreRecord = (record, query) => {
+      const q = query.toLowerCase().trim();
+      if (!q) return null;
+
+      const title = record.title.toLowerCase();
+      const desc = (record.description ?? '').toLowerCase();
+      const section = (record.section ?? '').toLowerCase();
+      const headings = (record.headings ?? []).map((h) => String(h).toLowerCase());
+
+      let score = 0;
+      let matchedHeading = '';
+
+      if (title === q) score += 120;
+      else if (title.startsWith(q)) score += 90;
+      else if (title.includes(q)) score += 70;
+
+      if (section.includes(q)) score += 30;
+      if (desc.includes(q)) score += 25;
+
+      for (const heading of headings) {
+        if (heading === q) {
+          score += 45;
+          matchedHeading = matchedHeading || heading;
+          continue;
+        }
+        if (heading.includes(q)) {
+          score += 32;
+          matchedHeading = matchedHeading || heading;
+        }
+      }
+
+      const queryTokens = tokenize(q);
+      for (const token of queryTokens) {
+        if (token.length < 2) continue;
+        if (title.includes(token)) score += 12;
+        if (desc.includes(token)) score += 6;
+      }
+
+      if (score === 0) return null;
+      return { score, matchedHeading };
+    };
+
+    const loadRecords = async () => {
+      if (records) return records;
+      if (!loadingPromise) {
+        loadingPromise = fetch(SEARCH_ENDPOINT, { headers: { accept: 'application/json' } })
+          .then((res) => {
+            if (!res.ok) throw new Error(`Search index request failed: ${res.status}`);
+            return res.json();
+          })
+          .then((data) => {
+            records = Array.isArray(data) ? data : [];
+            return records;
+          })
+          .finally(() => {
+            loadingPromise = null;
+          });
+      }
+      return loadingPromise;
+    };
+
+    const renderResults = (container, status, items, query) => {
+      if (!query.trim()) {
+        status.textContent = 'Start typing to search';
+        container.innerHTML = '';
+        return;
+      }
+
+      if (!items.length) {
+        status.textContent = 'No results';
+        container.innerHTML = `
+          <div class="rounded-2xl border border-zinc-200/80 bg-zinc-50/70 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300">
+            No matches found for <span class="font-mono">${escapeHtml(query)}</span>.
+          </div>
+        `;
+        return;
+      }
+
+      status.textContent = `${items.length} result${items.length === 1 ? '' : 's'}`;
+      container.innerHTML = `
+        <ul class="space-y-2">
+          ${items
+            .map((item) => {
+              const headingHtml = item.matchedHeading
+                ? `<p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Heading: ${escapeHtml(item.matchedHeading)}</p>`
+                : '';
+
+              return `
+                <li>
+                  <a href="${escapeHtml(item.href)}" class="block rounded-2xl border border-zinc-200/80 bg-white/80 p-4 transition hover:border-zinc-900 hover:bg-white dark:border-zinc-800 dark:bg-zinc-950/70 dark:hover:border-zinc-100 dark:hover:bg-zinc-950">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">${escapeHtml(item.section || 'Documentation')}</p>
+                        <p class="mt-1 font-serif text-2xl leading-tight tracking-tight">${escapeHtml(item.title)}</p>
+                      </div>
+                      <span class="shrink-0 rounded-full border border-zinc-300/80 px-2 py-0.5 text-[11px] font-mono text-zinc-600 dark:border-zinc-700 dark:text-zinc-300">↵</span>
+                    </div>
+                    ${item.description ? `<p class="mt-2 line-clamp-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">${escapeHtml(item.description)}</p>` : ''}
+                    ${headingHtml}
+                  </a>
+                </li>
+              `;
+            })
+            .join('')}
+        </ul>
+      `;
+    };
+
+    const bindSearch = () => {
+      const dialog = document.querySelector('[data-search-modal]');
+      const openButtons = Array.from(document.querySelectorAll('[data-open-search]'));
+      const closeButton = dialog?.querySelector('[data-close-search]');
+      const input = dialog?.querySelector('[data-search-input]');
+      const results = dialog?.querySelector('[data-search-results]');
+      const status = dialog?.querySelector('[data-search-status]');
+      if (!dialog || !input || !results || !status || dialog.dataset.bound === 'true') return;
+      dialog.dataset.bound = 'true';
+
+      let activeQuery = '';
+
+      const runSearch = async (query) => {
+        activeQuery = query;
+        if (!query.trim()) {
+          renderResults(results, status, [], '');
+          return;
+        }
+
+        status.textContent = 'Searching…';
+        try {
+          const index = await loadRecords();
+          if (activeQuery !== query) return;
+          const ranked = index
+            .map((record) => {
+              const rankedRecord = scoreRecord(record, query);
+              return rankedRecord ? { ...record, ...rankedRecord } : null;
+            })
+            .filter(Boolean)
+            .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
+            .slice(0, 12);
+          renderResults(results, status, ranked, query);
+        } catch (error) {
+          status.textContent = 'Search unavailable';
+          results.innerHTML = `
+            <div class="rounded-2xl border border-red-200/70 bg-red-50/70 p-4 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+              Failed to load the search index.
+            </div>
+          `;
+          console.error(error);
+        }
+      };
+
+      const open = async () => {
+        if (!dialog.open) dialog.showModal();
+        document.documentElement.classList.add('overflow-hidden');
+        input.focus();
+        input.select();
+        if (!records) {
+          status.textContent = 'Loading index…';
+          try {
+            await loadRecords();
+            if (!input.value.trim()) status.textContent = 'Start typing to search';
+          } catch {
+            status.textContent = 'Search unavailable';
+          }
+        }
+      };
+
+      const close = () => {
+        if (dialog.open) dialog.close();
+        document.documentElement.classList.remove('overflow-hidden');
+      };
+
+      for (const button of openButtons) {
+        button.addEventListener('click', (event) => {
+          event.preventDefault();
+          open();
+        });
+      }
+
+      closeButton?.addEventListener('click', close);
+
+      dialog.addEventListener('close', () => {
+        document.documentElement.classList.remove('overflow-hidden');
+      });
+
+      dialog.addEventListener('click', (event) => {
+        const rect = dialog.getBoundingClientRect();
+        const within =
+          event.clientX >= rect.left &&
+          event.clientX <= rect.right &&
+          event.clientY >= rect.top &&
+          event.clientY <= rect.bottom;
+        if (!within) close();
+      });
+
+      input.addEventListener('input', () => {
+        runSearch(input.value);
+      });
+
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          const firstLink = results.querySelector('a[href]');
+          if (firstLink) {
+            event.preventDefault();
+            window.location.href = firstLink.getAttribute('href');
+          }
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        const target = event.target;
+        const editable =
+          target instanceof HTMLElement &&
+          (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+          event.preventDefault();
+          open();
+          return;
+        }
+
+        if (event.key === '/' && !editable && !dialog.open) {
+          event.preventDefault();
+          open();
+        }
+
+        if (event.key === 'Escape' && dialog.open) {
+          close();
+        }
+      });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bindSearch, { once: true });
+    } else {
+      bindSearch();
+    }
+    document.addEventListener('astro:page-load', bindSearch);
+  })();
+</script>
