@@ -101,6 +101,8 @@ export async function getDocPageContext(id: string): Promise<DocsPageContext | u
   const sidebar: SidebarItem[] = [];
 
   for (const item of pages) {
+    if (item.id === 'index') continue;
+
     const link: SidebarLinkItem = {
       type: 'link',
       label: item.label,

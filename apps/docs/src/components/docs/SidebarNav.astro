@@ -9,26 +9,26 @@ const { items } = Astro.props as Props;
 ---
 
 <nav aria-label="Documentation navigation">
-  <ul class="space-y-2">
+  <ul class="space-y-3">
     {
       items.map((item) => (
         <li>
           {item.type === 'group' ? (
-            <details open class="rounded-2xl border border-zinc-200/80 bg-white/50 px-2 py-2 dark:border-zinc-800 dark:bg-zinc-950/40">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-2 py-2 hover:bg-zinc-100/80 dark:hover:bg-zinc-900">
+            <details open class="rounded-2xl border border-zinc-200/80 bg-white/55 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-950/45">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-2 py-1 hover:bg-zinc-100/80 dark:hover:bg-zinc-900">
                 <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.label}</span>
-                <span class="text-xs text-zinc-500">›</span>
+                <span class="text-xs text-zinc-500 transition group-open:rotate-90">›</span>
               </summary>
-              <ul class="mt-1 space-y-1.5 border-l border-zinc-200/80 pl-3 dark:border-zinc-800">
+              <ul class="mt-2 space-y-0.5">
                 {item.items.map((link) => (
                   <li>
                     <a
                       href={link.href}
                       aria-current={link.isCurrent ? 'page' : undefined}
                       class:list={[
-                        'block rounded-xl px-3 py-2 text-sm transition',
+                        'block rounded-xl px-3 py-1.5 text-sm transition',
                         link.isCurrent
-                          ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                          ? 'bg-zinc-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:bg-zinc-100 dark:text-zinc-950'
                           : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50'
                       ]}
                     >
