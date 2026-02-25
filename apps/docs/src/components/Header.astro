@@ -1,0 +1,26 @@
+---
+import config from 'virtual:starlight/user-config';
+import Search from '@astrojs/starlight/components/Search.astro';
+import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
+
+const shouldRenderSearch =
+  config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
+---
+
+<div class="curated-docs-header mx-auto flex h-full w-full max-w-7xl items-center justify-between gap-4 px-7 md:px-9">
+  <div class="min-w-0">
+    <SiteTitle />
+  </div>
+
+  <div class="flex items-center gap-2 print:hidden">
+    {shouldRenderSearch && <Search class="curated-search" />}
+    <a
+      href="https://github.com/lstudlo/ScholarMCP"
+      class="hidden rounded-full border border-zinc-300/80 px-3 py-1.5 text-xs tracking-[0.16em] uppercase hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900 sm:inline-flex"
+    >
+      GitHub
+    </a>
+    <ThemeSelect />
+  </div>
+</div>

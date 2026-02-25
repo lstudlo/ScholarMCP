@@ -20,6 +20,7 @@ export default defineConfig({
       },
       customCss: ['./src/styles/global.css'],
       components: {
+        Header: './src/components/Header.astro',
         SiteTitle: './src/components/SiteTitle.astro',
         Pagination: './src/components/Pagination.astro',
         ThemeSelect: './src/components/ThemeSelect.astro'

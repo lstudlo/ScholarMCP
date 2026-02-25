@@ -3,113 +3,300 @@
 @import '@astrojs/starlight-tailwind';
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap");
 
-/* Force exact page/chrome background colors per mode. */
+@theme {
+  --font-sans: "Instrument Sans", sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+/* Starlight defaults to dark mode (no `data-theme`). Match curated-skills tokens exactly there. */
 :root {
-  --sl-font: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --accent: oklch(0.922 0.235 126.092);
+  --sl-font: "Instrument Sans";
+  --sl-font-mono: "IBM Plex Mono";
+  --sl-line-height: 1.7;
+  --sl-line-height-headings: 1.15;
 
-  /* Accent color palette used by Starlight/Tailwind UI */
-  --color-accent-50: #f9f9f9;
-  --color-accent-100: #f2f2f2;
-  --color-accent-200: #e5e5e5;
-  --color-accent-300: #d4d4d4;
-  --color-accent-400: #a3a3a3;
-  --color-accent-500: #737373;
-  --color-accent-600: #525252;
-  --color-accent-700: #404040;
-  --color-accent-800: #262626;
-  --color-accent-900: #171717;
-  --color-accent-950: #0a0a0a;
-
-  /* Full typography scale */
-  --sl-text-2xs: 0.75rem;
-  --sl-text-xs: 0.875rem;
-  --sl-text-sm: 0.925rem;
+  --sl-text-xs: 0.8125rem;
+  --sl-text-sm: 0.9375rem;
   --sl-text-base: 1rem;
-  --sl-text-lg: 1.175rem;
-  --sl-text-xl: 1.375rem;
-  --sl-text-2xl: 1.625rem;
-  --sl-text-3xl: 2rem;
-  --sl-text-4xl: 2.5rem;
-  --sl-text-5xl: 3.125rem;
-  --sl-text-6xl: 4.25rem;
+  --sl-text-lg: 1.125rem;
+  --sl-text-xl: 1.25rem;
+  --sl-text-2xl: 1.5rem;
+  --sl-text-3xl: 1.875rem;
+  --sl-text-4xl: 2.4rem;
+  --sl-text-5xl: 3rem;
 
-  /* Semantic mappings */
-  --sl-text-body: var(--sl-text-base);
-  --sl-text-body-sm: var(--sl-text-sm);
-  --sl-text-code: var(--sl-text-sm);
-  --sl-text-code-sm: var(--sl-text-xs);
-  --sl-text-h1: var(--sl-text-4xl);
-  --sl-text-h2: var(--sl-text-3xl);
-  --sl-text-h3: var(--sl-text-2xl);
-  --sl-text-h4: var(--sl-text-xl);
-  --sl-text-h5: var(--sl-text-lg);
+  --sl-nav-height: 4rem;
+  --sl-nav-pad-x: 0rem;
+  --sl-nav-pad-y: 0rem;
+  --sl-sidebar-width: 19rem;
+  --sl-mobile-toc-height: 3.25rem;
+  --sl-content-width: 50rem;
+  --sl-content-pad-x: 1.25rem;
+  --sl-main-pad: 0 0 3rem 0;
+  --sl-menu-button-size: 2.5rem;
 
-  /* Force semantic/UI colors to grayscale in light mode */
-  --sl-color-accent-low: #e5e5e5;
-  --sl-color-accent: #525252;
-  --sl-color-accent-high: #262626;
+  --sl-color-white: rgb(244 244 245);
+  --sl-color-gray-1: rgb(228 228 231);
+  --sl-color-gray-2: rgb(212 212 216);
+  --sl-color-gray-3: rgb(161 161 170);
+  --sl-color-gray-4: rgb(113 113 122);
+  --sl-color-gray-5: rgb(39 39 42);
+  --sl-color-gray-6: rgb(17 17 17);
+  --sl-color-gray-7: rgb(9 9 11);
+  --sl-color-black: rgb(0 0 0);
+
+  --sl-color-orange-low: rgb(24 24 27);
+  --sl-color-orange: rgb(212 212 216);
+  --sl-color-orange-high: rgb(250 250 250);
+  --sl-color-green-low: rgb(16 26 16);
+  --sl-color-green: var(--accent);
+  --sl-color-green-high: color-mix(in oklab, var(--accent) 65%, white);
+  --sl-color-blue-low: rgb(19 19 23);
+  --sl-color-blue: rgb(212 212 216);
+  --sl-color-blue-high: rgb(250 250 250);
+  --sl-color-purple-low: rgb(19 19 23);
+  --sl-color-purple: rgb(212 212 216);
+  --sl-color-purple-high: rgb(250 250 250);
+  --sl-color-red-low: rgb(25 18 18);
+  --sl-color-red: rgb(252 165 165);
+  --sl-color-red-high: rgb(254 226 226);
+
+  --sl-color-accent-low: rgb(18 31 19);
+  --sl-color-accent: var(--accent);
+  --sl-color-accent-high: color-mix(in oklab, var(--accent) 70%, white);
+
+  --sl-color-text: rgb(212 212 216);
   --sl-color-text-accent: var(--sl-color-accent);
-  --sl-color-orange-low: #f2f2f2;
-  --sl-color-orange: #737373;
-  --sl-color-orange-high: #171717;
-  --sl-color-green-low: #f2f2f2;
-  --sl-color-green: #737373;
-  --sl-color-green-high: #171717;
-  --sl-color-blue-low: #f2f2f2;
-  --sl-color-blue: #737373;
-  --sl-color-blue-high: #171717;
-  --sl-color-purple-low: #f2f2f2;
-  --sl-color-purple: #737373;
-  --sl-color-purple-high: #171717;
-  --sl-color-red-low: #f2f2f2;
-  --sl-color-red: #737373;
-  --sl-color-red-high: #171717;
+  --sl-color-text-invert: rgb(10 10 10);
+  --sl-color-bg: rgb(0 0 0);
+  --sl-color-bg-nav: color-mix(in srgb, rgb(0 0 0) 72%, transparent);
+  --sl-color-bg-sidebar: rgb(0 0 0);
+  --sl-color-bg-inline-code: rgb(17 17 17);
+  --sl-color-bg-accent: var(--sl-color-accent);
+  --sl-color-hairline-light: rgb(39 39 42);
+  --sl-color-hairline: rgb(24 24 27);
+  --sl-color-hairline-shade: rgb(0 0 0);
+  --sl-color-backdrop-overlay: rgb(0 0 0 / 0.62);
 
-  --sl-color-bg: #ffffff;
-  --sl-color-bg-nav: #ffffff;
-  --sl-color-bg-sidebar: #ffffff;
+  --sl-shadow-sm: 0 1px 1px rgb(0 0 0 / 0.12), 0 2px 1px rgb(0 0 0 / 0.2);
+  --sl-shadow-md: 0 8px 24px rgb(0 0 0 / 0.35);
+  --sl-shadow-lg: 0 24px 48px rgb(0 0 0 / 0.5);
 
-  /* Code block colors (light) */
-  --ec-codeFg: #1f1f1f;
-  --ec-codeBg: #f5f5f5;
-  --ec-gtrFg: #6b6b6b;
+  --ec-codeFg: rgb(228 228 231);
+  --ec-codeBg: rgb(9 9 11);
+  --ec-gtrFg: rgb(113 113 122);
 }
 
-:root[data-theme='dark'] {
-  /* Force semantic/UI colors to grayscale in dark mode */
-  --sl-color-accent-low: #262626;
-  --sl-color-accent: #d4d4d4;
-  --sl-color-accent-high: #fafafa;
+:root[data-theme='light'] {
+  --accent: oklch(0.485 0.291 264.121);
+
+  --sl-color-white: rgb(24 24 27);
+  --sl-color-gray-1: rgb(39 39 42);
+  --sl-color-gray-2: rgb(63 63 70);
+  --sl-color-gray-3: rgb(113 113 122);
+  --sl-color-gray-4: rgb(161 161 170);
+  --sl-color-gray-5: rgb(212 212 216);
+  --sl-color-gray-6: rgb(244 244 245);
+  --sl-color-gray-7: rgb(250 250 250);
+  --sl-color-black: rgb(255 255 255);
+
+  --sl-color-orange-low: rgb(244 244 245);
+  --sl-color-orange: rgb(82 82 91);
+  --sl-color-orange-high: rgb(17 24 39);
+  --sl-color-green-low: rgb(244 244 245);
+  --sl-color-green: rgb(82 82 91);
+  --sl-color-green-high: rgb(17 24 39);
+  --sl-color-blue-low: color-mix(in oklab, var(--accent) 13%, white);
+  --sl-color-blue: var(--accent);
+  --sl-color-blue-high: color-mix(in oklab, var(--accent) 58%, black);
+  --sl-color-purple-low: rgb(244 244 245);
+  --sl-color-purple: rgb(82 82 91);
+  --sl-color-purple-high: rgb(17 24 39);
+  --sl-color-red-low: rgb(254 242 242);
+  --sl-color-red: rgb(220 38 38);
+  --sl-color-red-high: rgb(127 29 29);
+
+  --sl-color-accent-low: color-mix(in oklab, var(--accent) 14%, white);
+  --sl-color-accent: var(--accent);
+  --sl-color-accent-high: color-mix(in oklab, var(--accent) 60%, black);
+
+  --sl-color-text: rgb(63 63 70);
   --sl-color-text-accent: var(--sl-color-accent);
-  --sl-color-orange-low: #141414;
-  --sl-color-orange: #a3a3a3;
-  --sl-color-orange-high: #f5f5f5;
-  --sl-color-green-low: #141414;
-  --sl-color-green: #a3a3a3;
-  --sl-color-green-high: #f5f5f5;
-  --sl-color-blue-low: #141414;
-  --sl-color-blue: #a3a3a3;
-  --sl-color-blue-high: #f5f5f5;
-  --sl-color-purple-low: #141414;
-  --sl-color-purple: #a3a3a3;
-  --sl-color-purple-high: #f5f5f5;
-  --sl-color-red-low: #141414;
-  --sl-color-red: #a3a3a3;
-  --sl-color-red-high: #f5f5f5;
+  --sl-color-text-invert: rgb(255 255 255);
+  --sl-color-bg: rgb(255 255 255);
+  --sl-color-bg-nav: rgb(255 255 255 / 0.78);
+  --sl-color-bg-sidebar: rgb(255 255 255);
+  --sl-color-bg-inline-code: rgb(244 244 245);
+  --sl-color-bg-accent: var(--sl-color-accent);
+  --sl-color-hairline-light: rgb(228 228 231);
+  --sl-color-hairline: rgb(244 244 245);
+  --sl-color-hairline-shade: rgb(228 228 231);
+  --sl-color-backdrop-overlay: rgb(63 63 70 / 0.45);
 
-  --sl-color-bg: #000000;
-  --sl-color-bg-nav: #000000;
-  --sl-color-bg-sidebar: #000000;
+  --sl-shadow-sm: 0 1px 1px rgb(0 0 0 / 0.05), 0 2px 2px rgb(0 0 0 / 0.04);
+  --sl-shadow-md: 0 10px 26px rgb(0 0 0 / 0.09);
+  --sl-shadow-lg: 0 20px 40px rgb(0 0 0 / 0.12);
 
-  /* Code block colors (dark) */
-  --ec-codeFg: #e5e5e5;
-  --ec-codeBg: #111111;
-  --ec-gtrFg: #9a9a9a;
+  --ec-codeFg: rgb(39 39 42);
+  --ec-codeBg: rgb(248 250 252);
+  --ec-gtrFg: rgb(113 113 122);
 }
 
-/* Force syntax highlighting tokens in fenced code blocks to monochrome. */
+@layer starlight.core {
+  html,
+  body {
+    background: var(--sl-color-bg);
+  }
+
+  body {
+    font-family: var(--__sl-font);
+    color: var(--sl-color-text);
+    position: relative;
+    min-height: 100vh;
+  }
+
+  body::before,
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  body::before {
+    opacity: 0.7;
+    background:
+      radial-gradient(circle at 20% 0%, rgb(255 255 255 / 0.09), transparent 45%),
+      radial-gradient(circle at 80% 100%, rgb(255 255 255 / 0.06), transparent 50%);
+  }
+
+  :root[data-theme='light'] body::before {
+    background:
+      radial-gradient(circle at 20% 0%, rgb(0 0 0 / 0.06), transparent 45%),
+      radial-gradient(circle at 80% 100%, rgb(0 0 0 / 0.05), transparent 50%);
+  }
+
+  body::after {
+    opacity: 0.4;
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+    background-size: 14px 14px;
+  }
+
+  :root[data-theme='light'] body::after {
+    opacity: 0.65;
+    background-image:
+      linear-gradient(to right, rgb(0 0 0 / 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(0 0 0 / 0.045) 1px, transparent 1px);
+  }
+
+  .page > .header {
+    border-bottom: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .page > .header::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: 1px;
+    background: color-mix(in srgb, var(--sl-color-hairline-light) 70%, transparent);
+  }
+
+  .page > .header > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .curated-docs-header {
+    background: var(--sl-color-bg-nav);
+    backdrop-filter: blur(16px);
+  }
+
+  .curated-search {
+    display: contents;
+  }
+
+  .curated-search button[data-open-modal] {
+    height: 2.125rem;
+    width: 2.125rem;
+    border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 80%, transparent);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--sl-color-bg) 70%, transparent);
+    color: var(--sl-color-text);
+    box-shadow: none;
+    font-size: var(--sl-text-xs);
+    transition:
+      border-color 160ms ease,
+      color 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .curated-search button[data-open-modal]:hover {
+    border-color: var(--sl-color-accent);
+    color: var(--sl-color-text-accent);
+  }
+
+  .curated-search button[data-open-modal] svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  @media (min-width: 50rem) {
+    :root {
+      --sl-nav-height: 4.25rem;
+      --sl-nav-pad-x: 0rem;
+      --sl-content-pad-x: 1.5rem;
+      --sl-mobile-toc-height: 0rem;
+    }
+
+    .curated-search button[data-open-modal] {
+      width: 100%;
+      min-width: 10.5rem;
+      max-width: 14rem;
+      justify-content: flex-start;
+      gap: 0.5rem;
+      border-radius: 9999px;
+      padding-inline: 0.75rem 0.5rem;
+      background: color-mix(in srgb, var(--sl-color-bg) 68%, transparent);
+      color: var(--sl-color-text);
+    }
+
+    .curated-search button[data-open-modal]:hover {
+      border-color: color-mix(in oklab, var(--sl-color-accent) 55%, var(--sl-color-hairline-light));
+      background: color-mix(in srgb, var(--sl-color-bg) 55%, transparent);
+    }
+
+    .curated-search button[data-open-modal] > span {
+      white-space: nowrap;
+    }
+
+    .curated-search button[data-open-modal] > kbd {
+      margin-inline-start: auto;
+      border-radius: 9999px;
+      border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 80%, transparent);
+      background: transparent;
+      padding-inline: 0.45rem;
+      color: var(--sl-color-gray-3);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .curated-search button[data-open-modal] {
+      transition: none;
+    }
+  }
+}
+
+/* Keep code blocks monochrome to fit the brand. */
 .expressive-code .ec-line :where(span[style^='--']:not([class])) {
   color: var(--ec-codeFg);
   background-color: transparent;
