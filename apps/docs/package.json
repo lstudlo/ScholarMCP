@@ -14,9 +14,6 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.13",
-    "@astrojs/starlight": "latest",
-    "@astrojs/starlight-tailwind": "^4.0.2",
-    "@lucide/astro": "^0.575.0",
     "@tailwindcss/vite": "^4.2.0",
     "astro": "latest",
     "tailwindcss": "^4.2.0",

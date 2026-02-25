@@ -60,7 +60,7 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
     </div>
   </header>
 
-  <main class="relative z-10 mx-auto w-full px-6 pb-6 pt-4 sm:py-10 md:px-8">
+  <main class="relative z-10 mx-auto w-full px-6 py-8 md:px-8">
     <div class:list={['grid gap-4 lg:gap-6', isHome ? 'xl:grid-cols-[minmax(0,1fr)]' : 'xl:grid-cols-[18.5rem_minmax(0,1fr)_17rem] xl:items-start']}>
       {!isHome && (
         <aside class="hidden xl:block">
@@ -107,7 +107,7 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
   <dialog
     id="docs-search-modal"
     data-search-modal
-    class="w-[min(42rem,calc(100vw-1.5rem))] max-w-none rounded-3xl border border-zinc-200/80 bg-white/95 p-0 text-zinc-950 shadow-2xl backdrop:bg-black/35 backdrop:backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95 dark:text-zinc-100"
+    class="m-auto w-[min(42rem,calc(100vw-1.5rem))] max-w-none rounded-3xl border border-zinc-200/80 bg-white/95 p-0 text-zinc-950 shadow-2xl backdrop:bg-black/35 backdrop:backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95 dark:text-zinc-100"
     aria-label="Search documentation"
   >
     <div class="border-b border-zinc-200/80 px-4 py-3 dark:border-zinc-800">

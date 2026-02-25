@@ -8,6 +8,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const siteUrl = process.env.DOCS_SITE_URL ?? 'https://scholar-mcp.lstudlo.com';
 
 export default defineConfig({
+  devToolbar: {
+    enabled: false
+  },
   site: siteUrl,
   integrations: [mdx()],
   vite: {
