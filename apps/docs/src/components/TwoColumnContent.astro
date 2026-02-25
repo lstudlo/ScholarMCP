@@ -1,0 +1,59 @@
+---
+const hasToc = Boolean(Astro.locals.starlightRoute.toc);
+---
+
+<div class="docs-two-col">
+  {
+    hasToc && (
+      <aside class="right-sidebar-container print:hidden">
+        <div class="right-sidebar"><slot name="right-sidebar" /></div>
+      </aside>
+    )
+  }
+
+  <div class="main-pane"><slot /></div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .docs-two-col {
+      width: 100%;
+      max-width: 86rem;
+      margin-inline: auto;
+      padding-inline: 0.75rem;
+    }
+
+    .main-pane {
+      min-width: 0;
+    }
+
+    @media (min-width: 50rem) {
+      .docs-two-col {
+        padding-inline: 1rem;
+      }
+    }
+
+    @media (min-width: 72rem) {
+      .docs-two-col {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, var(--sl-sidebar-width));
+        align-items: start;
+        gap: 1rem;
+      }
+
+      .right-sidebar-container {
+        order: 2;
+        position: sticky;
+        top: calc(var(--sl-nav-height) + 1rem);
+      }
+
+      .right-sidebar {
+        width: 100%;
+      }
+
+      .main-pane {
+        order: 1;
+      }
+    }
+  }
+</style>

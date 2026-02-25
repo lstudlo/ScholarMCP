@@ -1,0 +1,25 @@
+---
+import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro';
+import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro';
+import SidebarTree from './SidebarTree.astro';
+
+const { sidebar } = Astro.locals.starlightRoute;
+---
+
+<SidebarPersister>
+  <div class="flex flex-col gap-4">
+    <section class="rounded-3xl border border-zinc-200/80 bg-white/75 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
+      <p class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">Documentation</p>
+      <h2 class="mt-1 font-serif text-2xl tracking-tight text-zinc-950 dark:text-zinc-100">Browse Pages</h2>
+      <div class="mt-4">
+        <SidebarTree items={sidebar} />
+      </div>
+    </section>
+  </div>
+</SidebarPersister>
+
+<div class="mt-4 md:hidden">
+  <div class="rounded-2xl border border-zinc-200/80 bg-white/75 p-3 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
+    <MobileMenuFooter />
+  </div>
+</div>

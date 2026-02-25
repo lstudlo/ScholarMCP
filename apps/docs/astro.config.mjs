@@ -20,8 +20,13 @@ export default defineConfig({
       },
       customCss: ['./src/styles/global.css'],
       components: {
+        ContentPanel: './src/components/ContentPanel.astro',
         Header: './src/components/Header.astro',
+        PageFrame: './src/components/PageFrame.astro',
+        PageSidebar: './src/components/PageSidebar.astro',
         SiteTitle: './src/components/SiteTitle.astro',
+        Sidebar: './src/components/Sidebar.astro',
+        TwoColumnContent: './src/components/TwoColumnContent.astro',
         Pagination: './src/components/Pagination.astro',
         ThemeSelect: './src/components/ThemeSelect.astro'
       },

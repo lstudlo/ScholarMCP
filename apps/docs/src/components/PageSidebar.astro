@@ -1,0 +1,106 @@
+---
+import MobileTableOfContents from '@astrojs/starlight/components/MobileTableOfContents.astro';
+import TableOfContents from '@astrojs/starlight/components/TableOfContents.astro';
+---
+
+{
+  Astro.locals.starlightRoute.toc && (
+    <>
+      <div class="lg:hidden">
+        <MobileTableOfContents />
+      </div>
+
+      <div class="curated-right-sidebar sl-hidden lg:sl-block">
+        <div class="curated-right-sidebar-card">
+          <TableOfContents />
+        </div>
+      </div>
+    </>
+  )
+}
+
+<style>
+  @layer starlight.core {
+    .curated-right-sidebar-card {
+      border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 85%, transparent);
+      background: color-mix(in srgb, var(--sl-color-bg) 72%, transparent);
+      border-radius: 1.25rem;
+      padding: 0.9rem 0.95rem;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--sl-shadow-sm);
+    }
+
+    .curated-right-sidebar-card :global(h2) {
+      margin: 0 0 0.6rem;
+      color: var(--sl-color-gray-3);
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .curated-right-sidebar-card :global(nav > ul) {
+      margin: 0;
+    }
+
+    .curated-right-sidebar-card :global(a) {
+      display: block;
+      border-radius: 0.75rem;
+      padding: 0.42rem 0.55rem;
+      text-decoration: none;
+      color: var(--sl-color-gray-2);
+      transition: background-color 160ms ease, color 160ms ease;
+    }
+
+    .curated-right-sidebar-card :global(a:hover) {
+      background: color-mix(in srgb, var(--sl-color-bg) 50%, transparent);
+      color: var(--sl-color-white);
+    }
+
+    .curated-right-sidebar-card :global(a[aria-current='true']) {
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      color: var(--sl-color-white);
+    }
+
+    :global(mobile-starlight-toc nav) {
+      background: transparent;
+      border-top: 0;
+      padding-inline: 0.75rem;
+    }
+
+    :global(mobile-starlight-toc summary) {
+      padding: 0.5rem 0;
+      border-bottom: 0;
+      background: transparent;
+    }
+
+    :global(mobile-starlight-toc .toggle) {
+      border-color: color-mix(in srgb, var(--sl-color-hairline-light) 80%, transparent);
+      border-radius: 9999px;
+      background: color-mix(in srgb, var(--sl-color-bg) 68%, transparent);
+      backdrop-filter: blur(14px);
+      color: var(--sl-color-text);
+      box-shadow: none;
+    }
+
+    :global(mobile-starlight-toc details[open] .toggle) {
+      border-color: color-mix(in oklab, var(--sl-color-accent) 55%, var(--sl-color-hairline-light));
+      color: var(--sl-color-white);
+    }
+
+    :global(mobile-starlight-toc .dropdown) {
+      margin-top: 0.35rem;
+      border-radius: 1rem;
+      border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 85%, transparent);
+      background: color-mix(in srgb, var(--sl-color-bg) 84%, transparent);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--sl-shadow-md);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .curated-right-sidebar-card :global(a) {
+        transition: none;
+      }
+    }
+  }
+</style>

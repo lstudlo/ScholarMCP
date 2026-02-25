@@ -1,0 +1,44 @@
+<div class="content-panel">
+  <div class="sl-container">
+    <div class="curated-content-card">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .content-panel {
+      padding: 0 0 1rem;
+    }
+
+    .content-panel + .content-panel {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .sl-container {
+      max-width: var(--sl-content-width);
+    }
+
+    .curated-content-card {
+      border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 85%, transparent);
+      background: color-mix(in srgb, var(--sl-color-bg) 72%, transparent);
+      border-radius: 1.5rem;
+      padding: 1rem;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--sl-shadow-sm);
+    }
+
+    .curated-content-card > :global(* + *) {
+      margin-top: 1.25rem;
+    }
+
+    @media (min-width: 50rem) {
+      .curated-content-card {
+        border-radius: 1.75rem;
+        padding: 1.25rem;
+      }
+    }
+  }
+</style>

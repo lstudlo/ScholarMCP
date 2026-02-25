@@ -1,0 +1,144 @@
+---
+import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
+
+const { hasSidebar } = Astro.locals.starlightRoute;
+---
+
+<div class="page sl-flex">
+  <header class="header"><slot name="header" /></header>
+
+  {
+    hasSidebar && (
+      <nav class="sidebar print:hidden" aria-label={Astro.locals.t('sidebarNav.accessibleLabel')}>
+        <MobileMenuToggle />
+        <div id="starlight__sidebar" class="sidebar-pane">
+          <div class="sidebar-content">
+            <slot name="sidebar" />
+          </div>
+        </div>
+      </nav>
+    )
+  }
+
+  <div class="main-frame">
+    <div class="main-shell"><slot /></div>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <p>ScholarMCP documentation for MCP-based research workflows.</p>
+        <p class="font-mono">Astro + Starlight</p>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .page {
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header {
+      z-index: var(--sl-z-index-navbar);
+      position: fixed;
+      inset-inline-start: 0;
+      inset-block-start: 0;
+      width: 100%;
+      height: var(--sl-nav-height);
+      background: transparent;
+    }
+
+    :global([data-has-sidebar]) .header {
+      padding-inline-end: calc(var(--sl-menu-button-size) + 0.75rem);
+    }
+
+    .sidebar-pane {
+      visibility: var(--sl-sidebar-visibility, hidden);
+      position: fixed;
+      z-index: var(--sl-z-index-menu);
+      inset-block: var(--sl-nav-height) 0;
+      inset-inline-start: 0;
+      width: 100%;
+      background: color-mix(in srgb, var(--sl-color-bg) 78%, transparent);
+      backdrop-filter: blur(16px);
+      overflow-y: auto;
+      padding: 0.75rem 0.75rem 1rem;
+    }
+
+    :global([aria-expanded='true']) ~ .sidebar-pane {
+      --sl-sidebar-visibility: visible;
+    }
+
+    .sidebar-content {
+      width: 100%;
+      max-width: 24rem;
+      min-height: max-content;
+    }
+
+    .main-frame {
+      padding-top: calc(var(--sl-nav-height) + var(--sl-mobile-toc-height));
+      padding-inline-start: var(--sl-content-inline-start);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main-shell {
+      flex: 1;
+      padding-top: 0.75rem;
+    }
+
+    .site-footer {
+      padding: 0.5rem 0 1.25rem;
+    }
+
+    .site-footer-inner {
+      margin-inline: auto;
+      width: 100%;
+      max-width: 80rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding-inline: 1.25rem;
+      font-size: var(--sl-text-xs);
+      color: var(--sl-color-gray-3);
+    }
+
+    @media (min-width: 50rem) {
+      :global([data-has-sidebar]) .header {
+        padding-inline-end: 0;
+      }
+
+      .sidebar-pane {
+        --sl-sidebar-visibility: visible;
+        width: var(--sl-sidebar-width);
+        background: transparent;
+        backdrop-filter: none;
+        border-inline-end: 0;
+        padding: 0.75rem 0 1rem 1rem;
+      }
+
+      .sidebar-content {
+        max-width: none;
+        width: calc(var(--sl-sidebar-width) - 1rem);
+      }
+
+      .main-shell {
+        padding-top: 1rem;
+      }
+
+      .site-footer-inner {
+        padding-inline: 1.5rem;
+      }
+    }
+
+    @media (min-width: 72rem) {
+      .site-footer-inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+  }
+</style>
