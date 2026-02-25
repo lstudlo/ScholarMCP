@@ -36,12 +36,21 @@ html.dark body.docs-body {
 }
 
 .prose-wrap {
-  line-height: 1.75;
+  line-height: 1.65;
   color: rgb(63 63 70);
+  font-size: 1rem;
 }
 
 html.dark .prose-wrap {
   color: rgb(212 212 216);
+}
+
+.prose-wrap > :first-child {
+  margin-top: 0 !important;
+}
+
+.prose-wrap > :last-child {
+  margin-bottom: 0 !important;
 }
 
 .prose-wrap :where(h2, h3, h4) {
@@ -49,6 +58,7 @@ html.dark .prose-wrap {
   color: rgb(24 24 27);
   line-height: 1.15;
   letter-spacing: -0.01em;
+  scroll-margin-top: 6rem;
 }
 
 html.dark .prose-wrap :where(h2, h3, h4) {
@@ -56,13 +66,27 @@ html.dark .prose-wrap :where(h2, h3, h4) {
 }
 
 .prose-wrap h2 {
-  margin-top: 2rem;
+  margin-top: 2.2rem;
+  margin-bottom: 1rem;
   font-size: clamp(1.6rem, 1.3rem + 0.8vw, 2.1rem);
 }
 
 .prose-wrap h3 {
-  margin-top: 1.5rem;
+  margin-top: 1.55rem;
+  margin-bottom: 0.35rem;
   font-size: clamp(1.3rem, 1.15rem + 0.4vw, 1.55rem);
+}
+
+.prose-wrap h4 {
+  margin-top: 1.2rem;
+  margin-bottom: 0.3rem;
+  font-size: 1.15rem;
+}
+
+.prose-wrap h2 + :where(p, ul, ol, pre, blockquote, table),
+.prose-wrap h3 + :where(p, ul, ol, pre, blockquote, table),
+.prose-wrap h4 + :where(p, ul, ol, pre, blockquote, table) {
+  margin-top: 0;
 }
 
 .prose-wrap a {
@@ -75,7 +99,7 @@ html.dark .prose-wrap :where(h2, h3, h4) {
   font-family: "IBM Plex Mono", monospace;
 }
 
-.prose-wrap :not(pre) > code {
+.prose-wrap :not(pre):not(h2):not(h3):not(h4) > code {
   border: 1px solid rgb(212 212 216 / 0.9);
   border-radius: 0.4rem;
   padding: 0.1rem 0.35rem;
@@ -83,28 +107,173 @@ html.dark .prose-wrap :where(h2, h3, h4) {
   font-size: 0.875em;
 }
 
-html.dark .prose-wrap :not(pre) > code {
+html.dark .prose-wrap :not(pre):not(h2):not(h3):not(h4) > code {
   border-color: rgb(63 63 70 / 0.85);
   background: rgb(24 24 27 / 0.7);
 }
 
-.prose-wrap pre {
+.prose-wrap pre,
+.prose-wrap pre.astro-code {
+  position: relative;
   overflow-x: auto;
-  border-radius: 0.9rem;
-  border: 1px solid rgb(228 228 231);
-  background: rgb(250 250 250);
-  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgb(228 228 231 / 0.9);
+  background: transparent;
+  box-shadow: none;
+  padding: 0.8rem 5rem 0.8rem 0.95rem;
+  margin: 0.5rem 0 1.1rem;
 }
 
-html.dark .prose-wrap pre {
-  border-color: rgb(39 39 42);
-  background: rgb(9 9 11);
+html.dark .prose-wrap pre,
+html.dark .prose-wrap pre.astro-code {
+  border-color: rgb(39 39 42 / 0.95);
+  background: transparent;
+  box-shadow: none;
+}
+
+.prose-wrap pre.astro-code {
+  background-color: transparent !important;
+  color: rgb(39 39 42) !important;
+  font-size: 0.92rem;
+  line-height: 0 !important;
+}
+
+html.dark .prose-wrap pre.astro-code {
+  background-color: transparent !important;
+  color: rgb(228 228 231) !important;
+  line-height: 0 !important;
+}
+
+.prose-wrap pre code {
+  display: block;
+  min-width: max-content;
+  line-height: 0;
+}
+
+.prose-wrap pre.astro-code :where(span) {
+  color: rgb(39 39 42) !important;
+}
+
+html.dark .prose-wrap pre.astro-code :where(span) {
+  color: rgb(228 228 231) !important;
+}
+
+.prose-wrap pre.astro-code :where(.line) {
+  display: block;
+  line-height: 1.28 !important;
+}
+
+.prose-wrap pre :where(.shiki, .shiki span) {
+  background: transparent !important;
+}
+
+html.dark .prose-wrap pre :where(.shiki, .shiki span) {
+  background: transparent !important;
+}
+
+.prose-wrap p {
+  margin: 0 0 0.95rem;
+  line-height: 1.65;
+}
+
+.prose-wrap p + pre {
+  margin-top: 0.3rem;
+}
+
+.prose-wrap pre + p {
+  margin-top: 0.55rem;
+}
+
+.prose-wrap pre + h2 {
+  margin-top: 1.8rem;
+}
+
+.prose-wrap pre + h3 {
+  margin-top: 1.35rem;
+}
+
+.prose-wrap pre .code-copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgb(212 212 216 / 0.85);
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.82);
+  color: rgb(63 63 70);
+  min-height: 1.9rem;
+  padding: 0.3rem 0.75rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.prose-wrap pre .code-copy-btn:hover {
+  border-color: rgb(161 161 170);
+  background: rgb(255 255 255 / 0.92);
+  color: rgb(24 24 27);
+}
+
+.prose-wrap pre .code-copy-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.prose-wrap pre .code-copy-btn[data-copied="true"] {
+  border-color: color-mix(in srgb, var(--accent) 35%, rgb(212 212 216));
+  color: color-mix(in srgb, var(--accent) 65%, rgb(39 39 42));
+}
+
+html.dark .prose-wrap pre .code-copy-btn {
+  border-color: rgb(63 63 70 / 0.95);
+  background: rgb(10 10 10 / 0.72);
+  color: rgb(212 212 216);
+}
+
+html.dark .prose-wrap pre .code-copy-btn:hover {
+  border-color: rgb(82 82 91);
+  background: rgb(14 14 14 / 0.9);
+  color: rgb(244 244 245);
+}
+
+.prose-wrap h1 > code,
+.prose-wrap h2 > code,
+.prose-wrap h3 > code,
+.prose-wrap h4 > code,
+.prose-wrap h5 > code,
+.prose-wrap h6 > code {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: 0.72em;
+  line-height: 1 !important;
+  vertical-align: 0.03em;
+  color: inherit !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+}
+
+html.dark .prose-wrap h1 > code,
+html.dark .prose-wrap h2 > code,
+html.dark .prose-wrap h3 > code,
+html.dark .prose-wrap h4 > code,
+html.dark .prose-wrap h5 > code,
+html.dark .prose-wrap h6 > code {
+  color: inherit;
 }
 
 .prose-wrap table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.95rem;
+  margin: 0.6rem 0 1.15rem;
 }
 
 .prose-wrap th,
@@ -120,19 +289,82 @@ html.dark .prose-wrap td {
 }
 
 .prose-wrap blockquote {
-  margin: 1rem 0;
+  margin: 0.75rem 0 1rem;
   border-left: 3px solid var(--accent);
-  padding: 0.2rem 0 0.2rem 0.9rem;
+  padding: 0.15rem 0 0.15rem 0.9rem;
   color: inherit;
 }
 
 .prose-wrap ul,
 .prose-wrap ol {
+  margin: 0.25rem 0 1rem;
   padding-left: 1.25rem;
+}
+
+.prose-wrap ul {
+  list-style: disc;
+}
+
+.prose-wrap ol {
+  list-style: decimal;
+}
+
+.prose-wrap ul ul {
+  list-style: circle;
+}
+
+.prose-wrap ul ul ul {
+  list-style: square;
+}
+
+.prose-wrap ol ol {
+  list-style: lower-alpha;
+}
+
+.prose-wrap ol ol ol {
+  list-style: lower-roman;
+}
+
+.prose-wrap li::marker {
+  color: rgb(113 113 122);
+}
+
+html.dark .prose-wrap li::marker {
+  color: rgb(161 161 170);
+}
+
+.prose-wrap li {
+  margin: 0.2rem 0;
+}
+
+.prose-wrap li > :where(p, ul, ol) {
+  margin-top: 0.25rem;
+  margin-bottom: 0.45rem;
+}
+
+.prose-wrap ul ul,
+.prose-wrap ul ol,
+.prose-wrap ol ul,
+.prose-wrap ol ol {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
 }
 
 .prose-wrap img {
   max-width: 100%;
+  display: block;
+  margin: 0.7rem 0 1rem;
+  border-radius: 0.85rem;
+}
+
+.prose-wrap hr {
+  margin: 1.5rem 0 1.35rem;
+  border: 0;
+  border-top: 1px solid rgb(228 228 231 / 0.9);
+}
+
+html.dark .prose-wrap hr {
+  border-top-color: rgb(39 39 42 / 0.95);
 }
 
 .splash-prose ul {

@@ -35,5 +35,76 @@ const { title, description } = Astro.props as Props;
   </head>
   <body class="docs-body">
     <slot />
+    <script is:inline>
+      (() => {
+        const COPY_LABEL = 'Copy';
+        const COPIED_LABEL = 'Copied';
+
+        const copyText = async (text) => {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            return;
+          }
+
+          const area = document.createElement('textarea');
+          area.value = text;
+          area.setAttribute('readonly', '');
+          area.style.position = 'fixed';
+          area.style.opacity = '0';
+          document.body.append(area);
+          area.select();
+          document.execCommand('copy');
+          area.remove();
+        };
+
+        const enhanceCodeBlocks = () => {
+          const blocks = document.querySelectorAll('.prose-wrap pre');
+          for (const pre of blocks) {
+            if (!(pre instanceof HTMLElement) || pre.dataset.copyReady === 'true') continue;
+            const code = pre.querySelector('code');
+            if (!(code instanceof HTMLElement)) continue;
+
+            pre.dataset.copyReady = 'true';
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'code-copy-btn';
+            button.textContent = COPY_LABEL;
+            button.setAttribute('aria-label', 'Copy code block to clipboard');
+
+            let resetTimer;
+            button.addEventListener('click', async () => {
+              try {
+                await copyText(code.innerText);
+                button.textContent = COPIED_LABEL;
+                button.dataset.copied = 'true';
+                clearTimeout(resetTimer);
+                resetTimer = window.setTimeout(() => {
+                  button.textContent = COPY_LABEL;
+                  button.dataset.copied = 'false';
+                }, 1400);
+              } catch {
+                button.textContent = 'Error';
+                clearTimeout(resetTimer);
+                resetTimer = window.setTimeout(() => {
+                  button.textContent = COPY_LABEL;
+                  button.dataset.copied = 'false';
+                }, 1400);
+              }
+            });
+
+            pre.append(button);
+          }
+        };
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', enhanceCodeBlocks, { once: true });
+        } else {
+          enhanceCodeBlocks();
+        }
+
+        document.addEventListener('astro:page-load', enhanceCodeBlocks);
+      })();
+    </script>
   </body>
 </html>
