@@ -1,8 +1,8 @@
 ---
 import config from 'virtual:starlight/user-config';
 import Search from '@astrojs/starlight/components/Search.astro';
-import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
-import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
+import SiteTitle from './SiteTitle.astro';
+import ThemeSelect from './ThemeSelect.astro';
 
 const shouldRenderSearch =
   config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';

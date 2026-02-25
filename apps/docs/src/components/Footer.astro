@@ -1,0 +1,58 @@
+---
+import EditLink from '@astrojs/starlight/components/EditLink.astro';
+import LastUpdated from '@astrojs/starlight/components/LastUpdated.astro';
+import Pagination from './Pagination.astro';
+
+const { editUrl, lastUpdated } = Astro.locals.starlightRoute;
+---
+
+<footer class="docs-page-footer">
+  {
+    (editUrl || lastUpdated) && (
+      <div class="docs-page-meta">
+        <EditLink />
+        <LastUpdated />
+      </div>
+    )
+  }
+
+  <Pagination />
+</footer>
+
+<style>
+  @layer starlight.core {
+    .docs-page-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+
+    .docs-page-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.75rem;
+      color: var(--sl-color-gray-3);
+    }
+
+    .docs-page-meta :global(a),
+    .docs-page-meta :global(p) {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 85%, transparent);
+      border-radius: 9999px;
+      padding: 0.35rem 0.7rem;
+      background: color-mix(in srgb, var(--sl-color-bg) 62%, transparent);
+      text-decoration: none;
+      color: var(--sl-color-gray-3);
+      font-size: var(--sl-text-xs);
+    }
+
+    .docs-page-meta :global(a:hover) {
+      color: var(--sl-color-white);
+      border-color: color-mix(in oklab, var(--sl-color-accent) 55%, var(--sl-color-hairline-light));
+    }
+  }
+</style>

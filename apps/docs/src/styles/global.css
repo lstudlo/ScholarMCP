@@ -1,9 +1,9 @@
 @layer base, starlight, theme, components, utilities;
 
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap");
 @import '@astrojs/starlight-tailwind';
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap");
 
 @theme {
   --font-sans: "Instrument Sans", sans-serif;
@@ -300,4 +300,173 @@
 .expressive-code .ec-line :where(span[style^='--']:not([class])) {
   color: var(--ec-codeFg);
   background-color: transparent;
+}
+
+@layer starlight.core {
+  .curated-content-card :global(.sl-markdown-content) {
+    color: var(--sl-color-text);
+    font-size: var(--sl-text-base);
+  }
+
+  .curated-content-card :global(.sl-markdown-content > :first-child) {
+    margin-top: 0;
+  }
+
+  .curated-content-card :global(.sl-markdown-content h2),
+  .curated-content-card :global(.sl-markdown-content h3),
+  .curated-content-card :global(.sl-markdown-content h4) {
+    font-family: "Cormorant Garamond", serif;
+    color: var(--sl-color-white);
+    letter-spacing: -0.01em;
+    line-height: 1.12;
+    scroll-margin-top: calc(var(--sl-nav-height) + 1rem);
+  }
+
+  .curated-content-card :global(.sl-markdown-content h2) {
+    margin-top: 2rem;
+    font-size: clamp(1.65rem, 1.45rem + 0.6vw, 2.1rem);
+  }
+
+  .curated-content-card :global(.sl-markdown-content h3) {
+    margin-top: 1.65rem;
+    font-size: clamp(1.3rem, 1.18rem + 0.4vw, 1.6rem);
+  }
+
+  .curated-content-card :global(.sl-markdown-content h4) {
+    margin-top: 1.35rem;
+    font-size: 1.15rem;
+  }
+
+  .curated-content-card :global(.sl-markdown-content p),
+  .curated-content-card :global(.sl-markdown-content li) {
+    color: var(--sl-color-text);
+    line-height: 1.75;
+  }
+
+  .curated-content-card :global(.sl-markdown-content a) {
+    color: var(--sl-color-text-accent);
+    text-decoration-color: color-mix(in oklab, var(--sl-color-accent) 45%, transparent);
+    text-underline-offset: 0.18em;
+  }
+
+  .curated-content-card :global(.sl-markdown-content a:hover) {
+    text-decoration-color: var(--sl-color-accent);
+  }
+
+  .curated-content-card :global(.sl-markdown-content code:not(pre code)) {
+    border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 85%, transparent);
+    border-radius: 0.45rem;
+    background: color-mix(in srgb, var(--sl-color-bg) 70%, transparent);
+    padding: 0.14rem 0.38rem;
+    font-family: var(--__sl-font-mono);
+    font-size: 0.85em;
+  }
+
+  .curated-content-card :global(.sl-markdown-content pre),
+  .curated-content-card :global(.expressive-code) {
+    border-radius: 1rem;
+    border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 90%, transparent);
+    background: color-mix(in srgb, var(--sl-color-bg) 88%, transparent);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+    overflow: hidden;
+  }
+
+  :root[data-theme='light'] .curated-content-card :global(.sl-markdown-content pre),
+  :root[data-theme='light'] .curated-content-card :global(.expressive-code) {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.85);
+  }
+
+  .curated-content-card :global(table) {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 85%, transparent);
+    border-radius: 0.95rem;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--sl-color-bg) 75%, transparent);
+  }
+
+  .curated-content-card :global(th),
+  .curated-content-card :global(td) {
+    border-color: color-mix(in srgb, var(--sl-color-hairline-light) 70%, transparent);
+  }
+
+  .curated-content-card :global(th) {
+    background: color-mix(in srgb, var(--sl-color-bg) 60%, transparent);
+    color: var(--sl-color-white);
+    font-weight: 500;
+  }
+
+  .curated-content-card :global(blockquote) {
+    border-inline-start: 3px solid var(--sl-color-accent);
+    background: color-mix(in srgb, var(--sl-color-bg) 65%, transparent);
+    border-radius: 0.75rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .curated-content-card :global(.starlight-aside) {
+    border-radius: 1rem;
+    border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 85%, transparent);
+    background: color-mix(in srgb, var(--sl-color-bg) 68%, transparent);
+    box-shadow: none;
+  }
+
+  .curated-content-card :global(.starlight-aside__title) {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .docs-page-title + .sl-markdown-content,
+  .docs-hero + .sl-markdown-content {
+    margin-top: 1.5rem;
+  }
+
+  .docs-hero :global(a),
+  .docs-page-title :global(a) {
+    text-decoration: none;
+  }
+
+  .curated-search dialog {
+    border-radius: 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 85%, transparent);
+    background: color-mix(in srgb, var(--sl-color-bg) 86%, transparent);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--sl-shadow-lg);
+  }
+
+  .curated-search .dialog-frame {
+    gap: 0.75rem;
+  }
+
+  .curated-search #starlight__search {
+    --pagefind-ui-primary: var(--sl-color-white);
+    --pagefind-ui-text: var(--sl-color-gray-2);
+    --pagefind-ui-background: color-mix(in srgb, var(--sl-color-bg) 92%, transparent);
+    --pagefind-ui-border: color-mix(in srgb, var(--sl-color-hairline-light) 85%, transparent);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-tag: color-mix(in srgb, var(--sl-color-bg) 60%, transparent);
+    --pagefind-ui-border-radius: 14px;
+  }
+
+  :root[data-theme='light'] .curated-search #starlight__search {
+    --pagefind-ui-tag: rgb(244 244 245);
+  }
+
+  .curated-search #starlight__search .pagefind-ui__search-input {
+    color: var(--sl-color-white);
+  }
+
+  .curated-search #starlight__search .pagefind-ui__result {
+    border: 1px solid color-mix(in srgb, var(--sl-color-hairline-light) 70%, transparent);
+    border-radius: 0.95rem;
+    background: color-mix(in srgb, var(--sl-color-bg) 80%, transparent);
+  }
+
+  .curated-search #starlight__search .pagefind-ui__result-link {
+    color: var(--sl-color-white);
+  }
+
+  .curated-search #starlight__search .pagefind-ui__result-nested {
+    border-radius: 0.75rem;
+  }
 }

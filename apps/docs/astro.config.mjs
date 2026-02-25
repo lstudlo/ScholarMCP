@@ -21,9 +21,12 @@ export default defineConfig({
       customCss: ['./src/styles/global.css'],
       components: {
         ContentPanel: './src/components/ContentPanel.astro',
+        Footer: './src/components/Footer.astro',
         Header: './src/components/Header.astro',
+        Hero: './src/components/Hero.astro',
         PageFrame: './src/components/PageFrame.astro',
         PageSidebar: './src/components/PageSidebar.astro',
+        PageTitle: './src/components/PageTitle.astro',
         SiteTitle: './src/components/SiteTitle.astro',
         Sidebar: './src/components/Sidebar.astro',
         TwoColumnContent: './src/components/TwoColumnContent.astro',
