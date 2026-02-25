@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 
-const outputJsonPath = resolve(repoRoot, 'apps/docs/src/generated/releases.json');
 const outputMdxPath = resolve(repoRoot, 'apps/docs/src/content/docs/releases/index.mdx');
 
 const run = (command) => {
@@ -61,13 +60,6 @@ const releases = rows.map((row) => ({
   url: repoUrl ? `${repoUrl}/releases/tag/${encodeURIComponent(row.tag)}` : null
 }));
 
-const payload = {
-  currentVersion,
-  generatedFrom: 'git tags',
-  releaseCount: releases.length,
-  releases
-};
-
 const releaseLines = releases.length
   ? releases
       .map((release) => {
@@ -94,9 +86,7 @@ Current package version from \`packages/scholar-mcp/package.json\`: **${currentV
 ${releaseLines}
 `;
 
-mkdirSync(dirname(outputJsonPath), { recursive: true });
 mkdirSync(dirname(outputMdxPath), { recursive: true });
-writeFileSync(outputJsonPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 writeFileSync(outputMdxPath, `${mdx}\n`, 'utf8');
 
 process.stdout.write(`Generated releases index with ${releases.length} tag entries.\n`);

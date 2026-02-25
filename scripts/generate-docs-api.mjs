@@ -6,7 +6,6 @@ import ts from 'typescript';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 const sourcePath = resolve(repoRoot, 'packages/scholar-mcp/src/mcp/create-scholar-mcp-server.ts');
-const outputJsonPath = resolve(repoRoot, 'apps/docs/src/generated/mcp-tools.json');
 const outputMdxPath = resolve(repoRoot, 'apps/docs/src/content/docs/reference/mcp-tools.mdx');
 
 const sourceText = readFileSync(sourcePath, 'utf8');
@@ -220,12 +219,6 @@ visit(sourceFile);
 
 tools.sort((a, b) => a.name.localeCompare(b.name));
 
-const docsPayload = {
-  generatedFrom: 'packages/scholar-mcp/src/mcp/create-scholar-mcp-server.ts',
-  toolCount: tools.length,
-  tools
-};
-
 const escapeMdxInline = (value) =>
   String(value ?? '')
     .replace(/\|/g, '\\|')
@@ -278,9 +271,7 @@ Total tools: **${tools.length}**.
 
 ${tools.map(renderToolSection).join('\n')}`;
 
-mkdirSync(dirname(outputJsonPath), { recursive: true });
 mkdirSync(dirname(outputMdxPath), { recursive: true });
-writeFileSync(outputJsonPath, `${JSON.stringify(docsPayload, null, 2)}\n`, 'utf8');
 writeFileSync(outputMdxPath, `${mdx}\n`, 'utf8');
 
 process.stdout.write(`Generated MCP docs for ${tools.length} tools.\n`);

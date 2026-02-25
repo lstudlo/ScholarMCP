@@ -64,7 +64,7 @@ const homeSectionCards = isHome
 ---
 
 <DocsLayout title={title} description={description}>
-  <SiteShell sidebar={sidebar} currentPage={page} toc={toc} prev={prev} next={next} isHome={isHome}>
+  <SiteShell sidebar={sidebar} toc={toc} prev={prev} next={next} isHome={isHome}>
     {
       isHome ? (
         <div class="space-y-10">
@@ -165,21 +165,7 @@ const homeSectionCards = isHome
               ))}
             </div>
           </section>
-
-          <section>
-            <div class="mb-4 flex items-end justify-between gap-4 px-1">
-              <div>
-                <p class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">Overview</p>
-                <h2 class="mt-1 font-serif text-2xl tracking-tight sm:text-3xl">
-                  Product overview and entry points
-                </h2>
-              </div>
-            </div>
-
-            <article class="prose-wrap splash-prose rounded-3xl border border-zinc-200/80 bg-white/75 p-5 backdrop-blur sm:p-6 dark:border-zinc-800 dark:bg-zinc-950/70">
-              <Content />
-            </article>
-          </section>
+          
         </div>
       ) : (
         <div class="space-y-5">

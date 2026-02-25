@@ -16,8 +16,7 @@
     "@astrojs/mdx": "^4.3.13",
     "@tailwindcss/vite": "^4.2.0",
     "astro": "latest",
-    "tailwindcss": "^4.2.0",
-    "zod": "3.25.76"
+    "tailwindcss": "^4.2.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
