@@ -1,0 +1,107 @@
+---
+import { getCollection } from 'astro:content';
+import DocsLayout from '../layouts/DocsLayout.astro';
+import SiteShell from '../components/docs/SiteShell.astro';
+import { breadcrumbParts, getDocPageContext, renderDocEntry } from '../lib/docs';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs', ({ data }) => !data.draft);
+  return docs.map((entry) => ({
+    params: { slug: entry.id === 'index' ? undefined : entry.id.replace(/\/index$/, '') },
+    props: { docId: entry.id }
+  }));
+}
+
+const { docId } = Astro.props as { docId: string };
+const context = await getDocPageContext(docId);
+
+if (!context) {
+  throw new Error(`Unknown docs entry: ${docId}`);
+}
+
+const { page, sidebar, prev, next } = context;
+const { Content, headings } = await renderDocEntry(page.entry);
+const title = page.id === 'index' ? `${page.label} | ScholarMCP` : `${page.label} | ScholarMCP Docs`;
+const description = page.entry.data.description ?? 'ScholarMCP documentation';
+const isHome = page.id === 'index' || page.entry.data.template === 'splash';
+const crumbs = breadcrumbParts(page);
+
+type Heading = { depth: number; slug: string; text: string };
+const toc = (headings as Heading[]).filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+<DocsLayout title={title} description={description}>
+  <SiteShell sidebar={sidebar} currentPage={page} toc={toc} prev={prev} next={next} isHome={isHome}>
+    {
+      isHome ? (
+        <article class="rounded-4xl border border-zinc-200/80 bg-white/75 p-6 shadow-xl backdrop-blur sm:p-8 dark:border-zinc-800 dark:bg-zinc-950/70">
+          <p class="text-[11px] tracking-[0.18em] text-zinc-500 uppercase">ScholarMCP Docs</p>
+          <h1 class="mt-3 max-w-3xl font-serif text-4xl leading-tight tracking-tight sm:text-5xl">
+            {page.entry.data.hero?.title ?? page.entry.data.title}
+          </h1>
+          {page.entry.data.hero?.tagline && (
+            <p class="mt-4 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+              {page.entry.data.hero.tagline}
+            </p>
+          )}
+          {page.entry.data.hero?.actions?.length ? (
+            <div class="mt-8 flex flex-wrap gap-2">
+              {page.entry.data.hero.actions.map((action) => (
+                <a
+                  href={action.link}
+                  class:list={[
+                    'rounded-full px-4 py-2 text-xs tracking-[0.16em] uppercase transition',
+                    action.variant === 'minimal'
+                      ? 'border border-zinc-300/80 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900'
+                      : 'border border-[var(--accent)] bg-[var(--accent)] text-white hover:opacity-90 dark:text-zinc-950'
+                  ]}
+                >
+                  {action.text}
+                </a>
+              ))}
+            </div>
+          ) : null}
+
+          <div class="prose-wrap mt-8">
+            <Content />
+          </div>
+        </article>
+      ) : (
+        <div class="space-y-4">
+          <div class="rounded-3xl border border-zinc-200/80 bg-white/75 p-5 backdrop-blur sm:p-6 dark:border-zinc-800 dark:bg-zinc-950/70">
+            <nav class="text-xs text-zinc-500">
+              <a href="/" class="hover:text-zinc-900 hover:underline dark:hover:text-zinc-100">Docs</a>
+              {crumbs.map((crumb) => (
+                <>
+                  <span class="mx-2">/</span>
+                  {crumb.isCurrent ? (
+                    <span class="font-mono">{crumb.label}</span>
+                  ) : (
+                    <a href={crumb.href} class="hover:text-zinc-900 hover:underline dark:hover:text-zinc-100">
+                      {crumb.label}
+                    </a>
+                  )}
+                </>
+              ))}
+            </nav>
+
+            <h1 id="_top" class="mt-3 font-serif text-4xl leading-tight tracking-tight sm:text-5xl">
+              {page.entry.data.title}
+            </h1>
+            {page.entry.data.description && (
+              <p class="mt-4 max-w-3xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                {page.entry.data.description}
+              </p>
+            )}
+          </div>
+
+          <article class="prose-wrap rounded-3xl border border-zinc-200/80 bg-white/75 p-5 backdrop-blur sm:p-6 dark:border-zinc-800 dark:bg-zinc-950/70">
+            <Content />
+          </article>
+        </div>
+      )
+    }
+  </SiteShell>
+</DocsLayout>

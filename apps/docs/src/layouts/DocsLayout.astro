@@ -1,0 +1,39 @@
+---
+import '../styles/site.css';
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props as Props;
+---
+
+<!doctype html>
+<html lang="en" class="m-0 min-h-full scheme-light dark:scheme-dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" href="/favicon.png" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <script is:inline>
+      (() => {
+        const STORAGE_KEY = 'scholarmcp-theme';
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          const resolved =
+            saved === 'light' || saved === 'dark'
+              ? saved
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.classList.toggle('dark', resolved === 'dark');
+          document.documentElement.dataset.theme = resolved;
+        } catch {}
+      })();
+    </script>
+  </head>
+  <body class="docs-body">
+    <slot />
+  </body>
+</html>

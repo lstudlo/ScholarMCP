@@ -1,0 +1,136 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap");
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Instrument Sans", sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+:root {
+  --accent: oklch(0.485 0.291 264.121);
+}
+
+:root.dark {
+  --accent: oklch(0.922 0.235 126.092);
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body.docs-body {
+  min-height: 100vh;
+  background: white;
+  color: rgb(24 24 27);
+  font-family: "Instrument Sans", sans-serif;
+}
+
+html.dark body.docs-body {
+  background: black;
+  color: rgb(244 244 245);
+}
+
+.prose-wrap {
+  line-height: 1.75;
+  color: rgb(63 63 70);
+}
+
+html.dark .prose-wrap {
+  color: rgb(212 212 216);
+}
+
+.prose-wrap :where(h2, h3, h4) {
+  font-family: "Cormorant Garamond", serif;
+  color: rgb(24 24 27);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+html.dark .prose-wrap :where(h2, h3, h4) {
+  color: rgb(244 244 245);
+}
+
+.prose-wrap h2 {
+  margin-top: 2rem;
+  font-size: clamp(1.6rem, 1.3rem + 0.8vw, 2.1rem);
+}
+
+.prose-wrap h3 {
+  margin-top: 1.5rem;
+  font-size: clamp(1.3rem, 1.15rem + 0.4vw, 1.55rem);
+}
+
+.prose-wrap a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.prose-wrap code {
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.prose-wrap :not(pre) > code {
+  border: 1px solid rgb(212 212 216 / 0.9);
+  border-radius: 0.4rem;
+  padding: 0.1rem 0.35rem;
+  background: rgb(244 244 245 / 0.7);
+  font-size: 0.875em;
+}
+
+html.dark .prose-wrap :not(pre) > code {
+  border-color: rgb(63 63 70 / 0.85);
+  background: rgb(24 24 27 / 0.7);
+}
+
+.prose-wrap pre {
+  overflow-x: auto;
+  border-radius: 0.9rem;
+  border: 1px solid rgb(228 228 231);
+  background: rgb(250 250 250);
+  padding: 0.9rem 1rem;
+}
+
+html.dark .prose-wrap pre {
+  border-color: rgb(39 39 42);
+  background: rgb(9 9 11);
+}
+
+.prose-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.prose-wrap th,
+.prose-wrap td {
+  border: 1px solid rgb(228 228 231);
+  padding: 0.55rem 0.65rem;
+  vertical-align: top;
+}
+
+html.dark .prose-wrap th,
+html.dark .prose-wrap td {
+  border-color: rgb(39 39 42);
+}
+
+.prose-wrap blockquote {
+  margin: 1rem 0;
+  border-left: 3px solid var(--accent);
+  padding: 0.2rem 0 0.2rem 0.9rem;
+  color: inherit;
+}
+
+.prose-wrap ul,
+.prose-wrap ol {
+  padding-left: 1.25rem;
+}
+
+.prose-wrap img {
+  max-width: 100%;
+}

@@ -1,0 +1,104 @@
+---
+import type { DocsPageRecord, SidebarItem } from '../../lib/docs';
+import SidebarNav from './SidebarNav.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import TocNav from './TocNav.astro';
+
+interface TocHeading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  sidebar: SidebarItem[];
+  currentPage: DocsPageRecord;
+  toc: TocHeading[];
+  prev?: DocsPageRecord;
+  next?: DocsPageRecord;
+  isHome?: boolean;
+}
+
+const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
+---
+
+<div class="relative min-h-screen">
+  <div class="pointer-events-none absolute inset-0 opacity-70 dark:opacity-40">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(0,0,0,0.06),transparent_45%),radial-gradient(circle_at_80%_100%,rgba(0,0,0,0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.09),transparent_45%),radial-gradient(circle_at_80%_100%,rgba(255,255,255,0.06),transparent_50%)]"></div>
+    <div class="absolute inset-0 [background-image:linear-gradient(to_right,rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.045)_1px,transparent_1px)] [background-size:14px_14px] dark:[background-image:linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)]"></div>
+  </div>
+
+  <header class="sticky top-0 z-20 bg-white/75 backdrop-blur-xl dark:bg-black/70">
+    <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-7 py-4 md:px-9">
+      <a href="/" class="group min-w-0 no-underline">
+        <div class="flex items-center gap-2 sm:gap-3 group-hover:opacity-80">
+          <div class="font-serif text-xl leading-none tracking-tight sm:text-2xl">ScholarMCP</div>
+          <span class="text-[10px] tracking-[0.14em] text-[var(--accent)] sm:text-[11px]">by</span>
+          <img src="/lstudlo_logo.svg" alt="lstudlo" class="h-3.5 shrink-0 dark:invert" />
+        </div>
+      </a>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          data-open-search
+          class="hidden rounded-full border border-zinc-300/80 bg-white/70 px-3 py-1.5 text-xs tracking-[0.16em] uppercase backdrop-blur hover:bg-zinc-50 dark:border-zinc-700 dark:bg-black/70 dark:hover:bg-zinc-900 sm:inline-flex"
+        >
+          Search
+        </button>
+        <a
+          href="https://github.com/lstudlo/ScholarMCP"
+          class="hidden rounded-full border border-zinc-300/80 px-3 py-1.5 text-xs tracking-[0.16em] uppercase hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900 sm:inline-flex"
+        >
+          GitHub
+        </a>
+        <ThemeToggle />
+      </div>
+    </div>
+  </header>
+
+  <main class="relative z-10 mx-auto w-full max-w-7xl px-4 pb-8 pt-4 sm:px-6 md:px-8">
+    <div class:list={['grid gap-4 lg:gap-6', isHome ? 'xl:grid-cols-[minmax(0,1fr)]' : 'xl:grid-cols-[19rem_minmax(0,1fr)_17rem]']}>
+      {!isHome && (
+        <aside class="hidden xl:block">
+          <div class="sticky top-24 rounded-3xl border border-zinc-200/80 bg-white/75 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
+            <p class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">Documentation</p>
+            <h2 class="mt-1 font-serif text-2xl tracking-tight">Browse Pages</h2>
+            <div class="mt-4">
+              <SidebarNav items={sidebar} />
+            </div>
+          </div>
+        </aside>
+      )}
+
+      <section class="min-w-0">
+        <slot />
+
+        {!isHome && (prev || next) && (
+          <nav class="mt-4 grid gap-3 sm:grid-cols-2" aria-label="Pagination">
+            {prev ? (
+              <a href={prev.href} class="rounded-2xl border border-zinc-200/80 bg-white/75 p-4 backdrop-blur hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950/70 dark:hover:border-zinc-600">
+                <p class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">Previous</p>
+                <p class="mt-1 font-serif text-2xl leading-tight">{prev.label}</p>
+              </a>
+            ) : <div></div>}
+            {next ? (
+              <a href={next.href} class="rounded-2xl border border-zinc-200/80 bg-white/75 p-4 text-right backdrop-blur hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950/70 dark:hover:border-zinc-600">
+                <p class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">Next</p>
+                <p class="mt-1 font-serif text-2xl leading-tight">{next.label}</p>
+              </a>
+            ) : <div></div>}
+          </nav>
+        )}
+      </section>
+
+      {!isHome && (
+        <aside class="hidden xl:block">
+          <div class="sticky top-24">
+            <TocNav items={toc} />
+          </div>
+        </aside>
+      )}
+    </div>
+  </main>
+</div>

@@ -1,0 +1,33 @@
+---
+interface TocHeading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  items: TocHeading[];
+}
+
+const { items } = Astro.props as Props;
+---
+
+{
+  items.length > 0 && (
+    <aside class="rounded-2xl border border-zinc-200/80 bg-white/75 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
+      <p class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">On This Page</p>
+      <ul class="mt-3 space-y-1.5">
+        {items.map((item) => (
+          <li class:list={[item.depth > 2 && 'pl-3']}>
+            <a
+              href={`#${item.slug}`}
+              class="block rounded-lg px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
+            >
+              {item.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
+}
