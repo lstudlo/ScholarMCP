@@ -197,3 +197,13 @@ Releases publish to two registries:
 
 - npm: `scholar-mcp` via `.github/workflows/publish.yml`
 - GitHub Packages: `@lstudlo/scholar-mcp` via `.github/workflows/publish-github-packages.yml`
+
+Release with a minimal command set:
+
+1. Validate release readiness:
+   `pnpm release:check`
+2. Cut and publish a release:
+   `pnpm release` (patch), `pnpm release minor`, or `pnpm release major`
+3. Start from a clean git working tree (no unstaged/staged/untracked files).
+4. The release command runs checks, bumps `packages/scholar-mcp/package.json`, creates a release commit/tag, pushes branch/tag, then creates a GitHub Release.
+5. GitHub Actions publishes to npm and GitHub Packages from that release tag.

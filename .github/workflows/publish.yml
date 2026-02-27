@@ -34,7 +34,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run preflight checks
-        run: pnpm --filter scholar-mcp release:preflight
+        run: pnpm --filter scholar-mcp release:check
 
       - name: Verify version matches release tag
         run: |
