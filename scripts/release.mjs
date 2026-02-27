@@ -86,9 +86,15 @@ run("npm", ["version", releaseType, "--no-git-tag-version"], pkgDir);
 const version = readVersion();
 const tag = `v${version}`;
 const branch = runCapture("git", ["rev-parse", "--abbrev-ref", "HEAD"], repoRoot);
-const packageJsonRel = "packages/scholar-mcp/package.json";
+const releaseFiles = [
+  "packages/scholar-mcp/package.json",
+  "apps/docs/src/content/docs/reference/mcp-tools.mdx",
+  "apps/docs/src/content/docs/releases/index.mdx",
+];
 
-run("git", ["add", packageJsonRel], repoRoot);
+run("pnpm", ["docs:sync"], repoRoot);
+
+run("git", ["add", ...releaseFiles], repoRoot);
 run("git", ["commit", "-m", `chore(release): ${tag}`], repoRoot);
 
 if (isSuccess("git", ["rev-parse", "-q", "--verify", `refs/tags/${tag}`], repoRoot)) {

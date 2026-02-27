@@ -50,8 +50,6 @@ jobs:
 
       - name: Verify generated docs are committed
         run: |
-          git diff --exit-code \
-            apps/docs/src/generated/mcp-tools.json \
-            apps/docs/src/generated/releases.json \
+          git diff --exit-code -- \
             apps/docs/src/content/docs/reference/mcp-tools.mdx \
             apps/docs/src/content/docs/releases/index.mdx

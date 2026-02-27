@@ -48,4 +48,4 @@ jobs:
           echo "Version verified: $VERSION"
 
       - name: Publish to npm with provenance
-        run: pnpm --filter scholar-mcp publish --provenance --access public
+        run: pnpm --filter scholar-mcp publish --provenance --access public --no-git-checks
