@@ -45,6 +45,12 @@ One-off run without global install:
 npx -y scholar-mcp --transport=stdio
 ```
 
+Install from GitHub Packages (scoped mirror package):
+
+```bash
+npm install -g @lstudlo/scholar-mcp --registry=https://npm.pkg.github.com
+```
+
 ### 3. Run
 
 Stdio mode:
@@ -184,3 +190,10 @@ Advanced options exist in `src/config.ts` for timeouts, retries, HTTP session ca
 ## Usage Notes
 
 Google Scholar may throttle automated traffic. Use conservative request pacing, respect provider terms, and avoid abusive query patterns.
+
+## Publishing
+
+Releases publish to two registries:
+
+- npm: `scholar-mcp` via `.github/workflows/publish.yml`
+- GitHub Packages: `@lstudlo/scholar-mcp` via `.github/workflows/publish-github-packages.yml`
