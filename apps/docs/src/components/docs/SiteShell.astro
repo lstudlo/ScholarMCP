@@ -63,9 +63,9 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
     <div class:list={['grid gap-4 lg:gap-6', isHome ? 'xl:grid-cols-[minmax(0,1fr)]' : 'xl:grid-cols-[17rem_minmax(0,1fr)_17rem]' +
        ' xl:items-start']}>
       {!isHome && (
-        <aside class="hidden self-start xl:block">
-          <div class="sticky top-0">
-            <div class="flex max-h-[100dvh] min-h-0 flex-col overflow-hidden rounded-3xl border border-zinc-200/80 bg-white/75 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
+        <aside class="hidden self-start xl:block" data-pin-shell>
+          <div data-pin-panel>
+            <div class="flex max-h-[calc(100dvh-24px)] min-h-0 flex-col overflow-hidden rounded-3xl border border-zinc-200/80 bg-white/75 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
               <p class="shrink-0 text-[11px] tracking-[0.16em] text-zinc-500 uppercase">Documentation</p>
               <div class="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
                 <SidebarNav items={sidebar} />
@@ -97,8 +97,8 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
       </section>
 
       {!isHome && (
-        <aside class="hidden self-start xl:block">
-          <div class="sticky top-0">
+        <aside class="hidden self-start xl:block" data-pin-shell>
+          <div data-pin-panel>
             <TocNav items={toc} />
           </div>
         </aside>
@@ -142,6 +142,73 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
     </div>
   </dialog>
 </div>
+
+<script is:inline>
+  (() => {
+    const MEDIA_QUERY = '(min-width: 1280px)';
+    const SHELL_SELECTOR = '[data-pin-shell]';
+    const PANEL_SELECTOR = '[data-pin-panel]';
+    const PIN_OFFSET = 24;
+
+    const resetPanel = (panel) => {
+      panel.style.position = '';
+      panel.style.top = '';
+      panel.style.left = '';
+      panel.style.width = '';
+    };
+
+    const syncPanels = () => {
+      const isDesktop = window.matchMedia(MEDIA_QUERY).matches;
+      const shells = document.querySelectorAll(SHELL_SELECTOR);
+
+      for (const shell of shells) {
+        if (!(shell instanceof HTMLElement)) continue;
+        const panel = shell.querySelector(PANEL_SELECTOR);
+        if (!(panel instanceof HTMLElement)) continue;
+
+        if (!isDesktop) {
+          resetPanel(panel);
+          continue;
+        }
+
+        const rect = shell.getBoundingClientRect();
+        if (rect.top <= PIN_OFFSET) {
+          panel.style.position = 'fixed';
+          panel.style.top = `${PIN_OFFSET}px`;
+          panel.style.left = `${rect.left}px`;
+          panel.style.width = `${rect.width}px`;
+        } else {
+          resetPanel(panel);
+        }
+      }
+    };
+
+    let rafId = 0;
+    const scheduleSync = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        syncPanels();
+      });
+    };
+
+    const mountPinnedPanels = () => {
+      syncPanels();
+      window.removeEventListener('scroll', scheduleSync);
+      window.removeEventListener('resize', scheduleSync);
+      window.addEventListener('scroll', scheduleSync, { passive: true });
+      window.addEventListener('resize', scheduleSync);
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mountPinnedPanels, { once: true });
+    } else {
+      mountPinnedPanels();
+    }
+
+    document.addEventListener('astro:page-load', mountPinnedPanels);
+  })();
+</script>
 
 <script is:inline>
   (() => {
