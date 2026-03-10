@@ -13,7 +13,11 @@ Official documentation: https://scholar-mcp.lstudlo.com/
 ### Early Development Notice
 
 This project is still in early development, and rough edges or bugs may occur.
-If you run into a problem, please open an issue with steps to reproduce it.
+If you run into a problem, please open an issue and include:
+
+1. the agent used
+2. screenshots, if applicable
+3. steps to reproduce the issue
 
 ### ScholarMCP gives your agent tools to:
 - search papers across multiple sources
