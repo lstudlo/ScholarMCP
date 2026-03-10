@@ -80,7 +80,11 @@ describe('logger and version', () => {
   });
 
   it('reads the package version', () => {
-    expect(getPackageVersion()).toBe('1.0.8');
+    const packageVersion = JSON.parse(
+      readFileSync(resolve(process.cwd(), 'package.json'), 'utf8')
+    ).version as string;
+
+    expect(getPackageVersion()).toBe(packageVersion);
   });
 });
 

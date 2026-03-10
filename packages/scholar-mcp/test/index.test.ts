@@ -96,7 +96,7 @@ describe('index bootstrap', () => {
             transport: 'invalid',
             logLevel: 'error',
             serverName: 'scholar-mcp',
-            serverVersion: '1.0.8'
+            serverVersion: 'test-version'
           })
         };
       });
