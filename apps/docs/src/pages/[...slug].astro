@@ -54,7 +54,7 @@ const homeSectionCards = isHome
       const primary = items[0];
       return {
         label,
-        href: primary?.section ? `/${primary.section}/` : primary?.href ?? '/',
+        href: primary?.href ?? '/',
         count: items.length,
         summary: HOME_SECTION_SUMMARIES[label] ?? `${items.length} documentation page${items.length === 1 ? '' : 's'} available.`,
         items: items.slice(0, 4)
