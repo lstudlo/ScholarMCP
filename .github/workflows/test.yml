@@ -1,0 +1,46 @@
+name: test
+
+on:
+  pull_request:
+    paths:
+      - 'packages/scholar-mcp/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/test.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/scholar-mcp/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/test.yml'
+
+jobs:
+  scholar-mcp:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck scholar-mcp
+        run: pnpm --filter scholar-mcp check
+
+      - name: Run scholar-mcp coverage
+        run: pnpm --filter scholar-mcp test:coverage

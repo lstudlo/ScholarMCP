@@ -9,6 +9,7 @@
     "build": "pnpm --filter scholar-mcp build",
     "check": "pnpm --filter scholar-mcp check",
     "test": "pnpm --filter scholar-mcp test",
+    "test:coverage": "pnpm --filter scholar-mcp test:coverage",
     "test:watch": "pnpm --filter scholar-mcp test:watch",
     "pack:dry-run": "pnpm --filter scholar-mcp pack:dry-run",
     "pack": "pnpm --filter scholar-mcp pack",

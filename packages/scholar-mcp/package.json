@@ -23,9 +23,10 @@
     "pack:dry-run": "npm pack --dry-run",
     "check": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "pack": "npm run pack:dry-run && npm pack",
     "test:watch": "vitest",
-    "release:check": "npm run check && npm run test && npm run pack:dry-run"
+    "release:check": "npm run check && npm run test:coverage && npm run pack:dry-run"
   },
   "engines": {
     "node": ">=20"
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.3.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
