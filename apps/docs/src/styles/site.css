@@ -159,7 +159,6 @@ html.dark .prose-wrap pre.astro-code :where(span) {
 }
 
 .prose-wrap pre.astro-code :where(.line) {
-  display: block;
   line-height: 1.28 !important;
 }
 

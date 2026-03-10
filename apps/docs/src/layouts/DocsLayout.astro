@@ -39,6 +39,7 @@ const { title, description } = Astro.props as Props;
       (() => {
         const COPY_LABEL = 'Copy';
         const COPIED_LABEL = 'Copied';
+        const getCodeText = (code) => code.textContent ?? '';
 
         const copyText = async (text) => {
           if (navigator.clipboard?.writeText) {
@@ -75,7 +76,7 @@ const { title, description } = Astro.props as Props;
             let resetTimer;
             button.addEventListener('click', async () => {
               try {
-                await copyText(code.innerText);
+                await copyText(getCodeText(code));
                 button.textContent = COPIED_LABEL;
                 button.dataset.copied = 'true';
                 clearTimeout(resetTimer);
