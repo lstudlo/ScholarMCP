@@ -1,67 +1,44 @@
 ---
-title: Client Setup
-description: Connect ScholarMCP to Claude Code, Codex, and generic MCP clients.
+title: Client Setup Overview
+description: Pick a supported agent client and connect ScholarMCP with a CLI-first setup flow.
 sidebar:
-  order: 3
+  order: 6
 ---
 
-## Claude Code
+ScholarMCP currently documents three MCP-capable coding clients in detail:
 
-Using globally installed binary:
+- [Claude Code](/getting-started/claude-code/)
+- [OpenAI Codex](/getting-started/openai-codex/)
+- [OpenCode](/getting-started/opencode/)
 
-```bash
-claude mcp add -s user \
-  -e SCHOLAR_MCP_TRANSPORT=stdio \
-  -e SCHOLAR_REQUEST_DELAY_MS=350 \
-  -e RESEARCH_ALLOW_REMOTE_PDFS=true \
-  -e RESEARCH_ALLOW_LOCAL_PDFS=true \
-  -- scholar-mcp scholar-mcp --transport=stdio
-```
+## Recommended Setup Path
 
-Using `npx`:
+For all three clients, use this order:
 
-```bash
-claude mcp add -s user \
-  -e SCHOLAR_MCP_TRANSPORT=stdio \
-  -e SCHOLAR_REQUEST_DELAY_MS=350 \
-  -e RESEARCH_ALLOW_REMOTE_PDFS=true \
-  -e RESEARCH_ALLOW_LOCAL_PDFS=true \
-  -- scholar_mcp npx -y scholar-mcp --transport=stdio
-```
+1. Install or verify the client CLI.
+2. Register ScholarMCP with the client's MCP command.
+3. Confirm the server appears in the client's MCP list or detail view.
+4. Fall back to manual config only if the CLI registration fails or writes bad config.
 
-Check status:
+## When Manual Config Is Needed
 
-```bash
-claude mcp get scholar_mcp
-```
+Use the manual configuration section on the client-specific page if:
 
-Important: keep the `--` before `scholar_mcp` when using multiple `-e` flags.
+- the client has no stable non-interactive `mcp add` flow
+- the CLI rejects your environment variables or command arguments
+- the registration succeeds, but the stored config is incomplete or points at the wrong command
 
-## OpenAI Codex App
+If CLI registration succeeds but ScholarMCP still does not start correctly, verify:
 
-Add to `~/.codex/config.toml`:
+- the stored command still points to an installed `scholar-mcp` launcher
+- the MCP server is running in `stdio` mode
+- the environment variables are attached to the same server entry
+- your client can still see the `scholar_mcp` server after restart
 
-```toml
-[mcp_servers.scholar_mcp]
-command = "npx"
-args = ["-y", "scholar-mcp", "--transport=stdio"]
+## Choose Your Client
 
-[mcp_servers.scholar_mcp.env]
-SCHOLAR_MCP_TRANSPORT = "stdio"
-SCHOLAR_REQUEST_DELAY_MS = "350"
-RESEARCH_ALLOW_REMOTE_PDFS = "true"
-RESEARCH_ALLOW_LOCAL_PDFS = "true"
-```
+- Claude Code: [/getting-started/claude-code/](/getting-started/claude-code/)
+- OpenAI Codex: [/getting-started/openai-codex/](/getting-started/openai-codex/)
+- OpenCode: [/getting-started/opencode/](/getting-started/opencode/)
 
-## Generic MCP Clients
-
-Use one of the following:
-
-- `scholar-mcp --transport=stdio`
-- `npx -y scholar-mcp --transport=stdio`
-
-For HTTP mode:
-
-1. Start server with `SCHOLAR_MCP_TRANSPORT=http scholar-mcp`
-2. Connect MCP client to `http://127.0.0.1:3000/mcp`
-3. Optionally set `SCHOLAR_MCP_API_KEY` and send bearer token from client
+For general server runtime details, see [/reference/configuration/](/reference/configuration/) and [/reference/cli/](/reference/cli/).
