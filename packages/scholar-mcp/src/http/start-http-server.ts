@@ -374,16 +374,16 @@ export const createHttpApp = (
     }
 
     const { transport, parsedBody, closeAfterRequest, closeIfUninitialized, closeServer } = resolved;
+    let response: Response;
 
     try {
-      const response = await transport.handleRequest(c.req.raw, parsedBody === undefined ? undefined : { parsedBody });
-      return attachCorsHeaders(response, origin);
+      response = await transport.handleRequest(c.req.raw, parsedBody === undefined ? undefined : { parsedBody });
     } catch (error) {
       logger.error('MCP HTTP request handling failed', {
         error: error instanceof Error ? error.message : String(error)
       });
 
-      const response = Response.json(
+      response = Response.json(
         {
           jsonrpc: '2.0',
           error: {
@@ -394,13 +394,10 @@ export const createHttpApp = (
         },
         { status: 500 }
       );
-
-      return attachCorsHeaders(response, origin);
     } finally {
       if (closeAfterRequest) {
         await transport.close().catch(() => undefined);
         await closeServer();
-        return;
       }
 
       if (closeIfUninitialized && !transport.sessionId) {
@@ -408,6 +405,8 @@ export const createHttpApp = (
         await closeServer();
       }
     }
+
+    return attachCorsHeaders(response, origin);
   });
 
   return {
