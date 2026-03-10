@@ -7,9 +7,21 @@ sidebar:
 
 ## `claude mcp add` Fails with `Invalid environment variable format`
 
-Cause: missing separator before server name when passing multiple `-e` values.
+Cause: Claude CLI parsing usually means the separator before the launch command is missing or misplaced.
 
-Fix: include `--` before the MCP server alias.
+Fix:
+
+- include `--` before the MCP launch command
+- compare your command against [/getting-started/claude-code/](/getting-started/claude-code/)
+
+## Agent Client Setup Fails
+
+If ScholarMCP does not appear in your client, or the client stores incomplete MCP config, use the dedicated setup guides:
+
+- Claude Code: [/getting-started/claude-code/](/getting-started/claude-code/)
+- OpenAI Codex: [/getting-started/openai-codex/](/getting-started/openai-codex/)
+- OpenCode: [/getting-started/opencode/](/getting-started/opencode/)
+- Setup overview: [/getting-started/client-setup/](/getting-started/client-setup/)
 
 ## DOI Ingestion Fails to Resolve a PDF
 

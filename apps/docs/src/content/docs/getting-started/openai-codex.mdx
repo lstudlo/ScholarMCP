@@ -7,6 +7,11 @@ sidebar:
 
 This guide shows how to register ScholarMCP in the Codex CLI and desktop app using the shared MCP configuration model.
 
+Official references:
+
+- [Codex CLI](https://developers.openai.com/codex/cli/)
+- [OpenAI MCP guide](https://platform.openai.com/docs/guides/tools-remote-mcp)
+
 ## What OpenAI Codex Supports
 
 - CLI-first MCP registration with `codex mcp add`
@@ -83,6 +88,8 @@ Then restart Codex and confirm it is loaded:
 ```bash
 codex mcp list
 ```
+
+If the server is present but fails to start, compare the stored command and env values against [/reference/troubleshooting/](/reference/troubleshooting/).
 
 ## Run from Repo Instead of npm
 

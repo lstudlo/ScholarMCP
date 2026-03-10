@@ -7,6 +7,11 @@ sidebar:
 
 This guide shows how to register ScholarMCP in Claude Code. Use the Claude CLI first, then fall back to manual config only if the CLI flow fails.
 
+Official references:
+
+- [Claude Code overview](https://docs.anthropic.com/en/docs/claude-code/overview)
+- [Claude Code MCP](https://docs.anthropic.com/en/docs/claude-code/mcp)
+
 ## What Claude Code Supports
 
 - user-scoped MCP server registration with `claude mcp add`
@@ -87,6 +92,8 @@ After editing either file, restart Claude Code and run:
 ```bash
 claude mcp list
 ```
+
+If Claude still fails to load the server, check [/reference/troubleshooting/](/reference/troubleshooting/).
 
 ## Run from Repo Instead of npm
 

@@ -7,6 +7,11 @@ sidebar:
 
 This guide shows how to attach ScholarMCP to OpenCode using its MCP management commands and config file format.
 
+Official references:
+
+- [OpenCode MCP servers](https://opencode.ai/docs/mcp-servers/)
+- [OpenCode config](https://opencode.ai/docs/config/)
+
 ## What OpenCode Supports
 
 - MCP server management with `opencode mcp add` and `opencode mcp list`
@@ -82,6 +87,8 @@ Restart OpenCode, then run:
 ```bash
 opencode mcp list
 ```
+
+If the entry exists but does not launch correctly, compare the stored command and environment values against [/reference/troubleshooting/](/reference/troubleshooting/).
 
 ## Run from Repo Instead of npm
 
