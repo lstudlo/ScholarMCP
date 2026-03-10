@@ -14,7 +14,7 @@ const { items } = Astro.props as Props;
       items.map((item) => (
         <li>
           {item.type === 'group' ? (
-            <details open class="rounded-2xl border border-zinc-200/80 bg-white/55 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-950/45">
+            <details open={item.label === 'Getting Started'} class="rounded-2xl border border-zinc-200/80 bg-white/55 px-3 py-3 dark:border-zinc-800 dark:bg-zinc-950/45">
               <summary class="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-2 py-1 hover:bg-zinc-100/80 dark:hover:bg-zinc-900">
                 <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.label}</span>
                 <span class="text-xs text-zinc-500 transition group-open:rotate-90">›</span>
