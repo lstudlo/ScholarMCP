@@ -82,6 +82,73 @@ describe('extraction-service', () => {
 });
 
 describe('citation-service', () => {
+  it('suggests contextual citations and builds references from manuscript text', async () => {
+    const service = new CitationService({
+      searchGraph: async () => ({
+        query: 'graph retrieval',
+        totalResults: 2,
+        providerErrors: [],
+        results: [
+          {
+            title: 'Graph Retrieval Systems',
+            abstract: 'Graph retrieval with strong benchmark overlap.',
+            year: 2024,
+            venue: 'Conf',
+            doi: '10.1000/graph',
+            url: 'https://example.org/graph',
+            paperId: 'graph-1',
+            citationCount: 40,
+            influentialCitationCount: 5,
+            referenceCount: 10,
+            authors: [{ name: 'Jane Doe' }],
+            openAccess: { isOpenAccess: true, pdfUrl: null, license: null },
+            externalIds: { doi: '10.1000/graph' },
+            fieldsOfStudy: ['Computer Science'],
+            score: 0.8,
+            provenance: []
+          },
+          {
+            title: 'Graph Retrieval Systems',
+            abstract: 'Duplicate DOI for dedupe coverage.',
+            year: 2024,
+            venue: 'Conf',
+            doi: '10.1000/graph',
+            url: 'https://example.org/graph-dup',
+            paperId: 'graph-2',
+            citationCount: 10,
+            influentialCitationCount: 1,
+            referenceCount: 4,
+            authors: [{ name: 'Jane Doe' }],
+            openAccess: { isOpenAccess: false, pdfUrl: null, license: null },
+            externalIds: { doi: '10.1000/graph' },
+            fieldsOfStudy: ['Computer Science'],
+            score: 0.4,
+            provenance: []
+          }
+        ]
+      })
+    } as never);
+
+    const suggestions = await service.suggestContextualCitations({
+      manuscriptText: 'This manuscript discusses graph retrieval systems with benchmark overlap and strong citations.',
+      cursorContext: 'graph retrieval systems and benchmark overlap',
+      style: 'ieee',
+      k: 2,
+      recencyBias: 0.5
+    });
+
+    expect(suggestions.queryUsed).toContain('graph');
+    expect(suggestions.inlineSuggestion).toContain('[1]');
+
+    const references = await service.buildReferenceList({
+      style: 'apa',
+      manuscriptText: 'This manuscript discusses graph retrieval systems with benchmark overlap and strong citations.'
+    });
+
+    expect(references.references).toHaveLength(1);
+    expect(references.bibliographyText.length).toBeGreaterThan(0);
+  });
+
   it('builds bibliography and bibtex from explicit works', async () => {
     const service = new CitationService({
       searchGraph: async () => ({
@@ -241,5 +308,28 @@ describe('citation-service', () => {
     expect(result.completenessDiagnostics.some((item) => item.missingPersistentIdentifier)).toBe(true);
     expect(result.styleWarnings.some((warning) => warning.includes('Expected numeric citations'))).toBe(true);
     expect(result.styleWarnings).toContain('[TODO]');
+  });
+
+  it('detects mixed styles, empty reference lists, and missing author-year references', () => {
+    const service = new CitationService({
+      searchGraph: async () => ({
+        query: 'x',
+        totalResults: 0,
+        providerErrors: [],
+        results: []
+      })
+    } as never);
+
+    const result = service.validateManuscriptCitations(
+      'Prior work (Smith, 2024) supports this claim [1].',
+      [],
+      { style: 'apa' }
+    );
+
+    expect(result.referenceCount).toBe(0);
+    expect(result.missingReferences).toContain('(Smith, 2024)');
+    expect(result.styleWarnings).toContain('Reference list is empty.');
+    expect(result.styleWarnings).toContain('Mixed numeric and author-year inline citation patterns detected.');
+    expect(result.styleWarnings).toContain('Expected author-year citations for APA style.');
   });
 });

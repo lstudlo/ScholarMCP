@@ -42,5 +42,5 @@ jobs:
       - name: Typecheck scholar-mcp
         run: pnpm --filter scholar-mcp check
 
-      - name: Run scholar-mcp coverage
-        run: pnpm --filter scholar-mcp test:coverage
+      - name: Run scholar-mcp tests
+        run: pnpm --filter scholar-mcp test

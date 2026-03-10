@@ -19,14 +19,14 @@
     "dev:stdio": "tsx watch src/index.ts --transport=stdio",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "prepack": "npm run build && node scripts/prepare-package.mjs",
-    "pack:dry-run": "npm pack --dry-run",
+    "prepack": "pnpm run build && node scripts/prepare-package.mjs",
+    "pack:dry-run": "npm_config_cache=../../.npm-cache npm pack --dry-run",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "pack": "npm run pack:dry-run && npm pack",
+    "pack": "pnpm run pack:dry-run && npm_config_cache=../../.npm-cache npm pack",
     "test:watch": "vitest",
-    "release:check": "npm run check && npm run test:coverage && npm run pack:dry-run"
+    "release:check": "pnpm run check && pnpm run test && pnpm run pack:dry-run"
   },
   "engines": {
     "node": ">=20"

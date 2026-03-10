@@ -31,10 +31,14 @@ vi.mock('@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js', () => (
       this.options = options;
     }
 
-    async handleRequest(_request: Request, payload?: { parsedBody?: unknown }) {
+    async handleRequest(request: Request, payload?: { parsedBody?: unknown }) {
       mockState.handleRequestCalls += 1;
 
-      if (!this.sessionId && this.options.sessionIdGenerator) {
+      if (request.headers.get('x-throw') === '1') {
+        throw new Error('transport failed');
+      }
+
+      if (!this.sessionId && this.options.sessionIdGenerator && request.headers.get('x-skip-session-init') !== '1') {
         this.sessionId = this.options.sessionIdGenerator();
         this.options.onsessioninitialized?.(this.sessionId);
       }
@@ -165,6 +169,42 @@ describe('createHttpApp', () => {
     expect(mockState.connectCalls).toBe(1);
   });
 
+  it('serves root and health endpoints and rejects invalid bootstrap requests', async () => {
+    const { createHttpApp } = await import('../src/http/start-http-server.js');
+    const runtime = createHttpApp(makeConfig(), {} as never, {} as never, new Logger('error'));
+
+    const root = await runtime.app.fetch(new Request('http://127.0.0.1/', { headers: { host: '127.0.0.1' } }));
+    expect(await root.json()).toMatchObject({
+      name: 'scholar-mcp',
+      endpoint: '/mcp'
+    });
+
+    const health = await runtime.app.fetch(new Request('http://127.0.0.1/health', { headers: { host: '127.0.0.1' } }));
+    expect(await health.json()).toMatchObject({
+      status: 'ok',
+      sessionMode: 'stateful'
+    });
+
+    const invalidJson = await runtime.app.fetch(
+      new Request('http://127.0.0.1/mcp', {
+        method: 'POST',
+        body: '{not-json',
+        headers: {
+          'content-type': 'application/json',
+          host: '127.0.0.1'
+        }
+      })
+    );
+    expect(invalidJson.status).toBe(400);
+
+    const notInitialize = await runtime.app.fetch(
+      createJsonRequest('http://127.0.0.1/mcp', {
+        body: { jsonrpc: '2.0', id: 1, method: 'tools/list' }
+      })
+    );
+    expect(notInitialize.status).toBe(400);
+  });
+
   it('rejects unknown sessions', async () => {
     const { createHttpApp } = await import('../src/http/start-http-server.js');
     const runtime = createHttpApp(makeConfig(), {} as never, {} as never, new Logger('error'));
@@ -251,5 +291,45 @@ describe('createHttpApp', () => {
     );
 
     expect(authorized.status).toBe(200);
+  });
+
+  it('returns internal errors from the transport and evicts old sessions when capacity is exceeded', async () => {
+    const { createHttpApp } = await import('../src/http/start-http-server.js');
+    const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    const runtime = createHttpApp(
+      makeConfig({
+        SCHOLAR_MCP_HTTP_MAX_SESSIONS: 1
+      }),
+      {} as never,
+      {} as never,
+      new Logger('error')
+    );
+
+    const first = await runtime.app.fetch(createJsonRequest('http://127.0.0.1/mcp'));
+    const firstSession = first.headers.get('mcp-session-id');
+    expect(firstSession).toBeTruthy();
+
+    const second = await runtime.app.fetch(
+      createJsonRequest('http://127.0.0.1/mcp', {
+        headers: {
+          'x-throw': '1'
+        }
+      })
+    );
+
+    expect(second.status).toBe(500);
+    expect(warnSpy).toHaveBeenCalled();
+
+    const evicted = await runtime.app.fetch(
+      createJsonRequest('http://127.0.0.1/mcp', {
+        headers: {
+          'mcp-session-id': firstSession as string
+        },
+        body: { jsonrpc: '2.0', id: 2, method: 'tools/list' }
+      })
+    );
+
+    expect(evicted.status).toBe(404);
+    warnSpy.mockRestore();
   });
 });
