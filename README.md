@@ -3,6 +3,7 @@
 # ScholarMCP
 
 [![npm](https://img.shields.io/npm/v/scholar-mcp)](https://www.npmjs.com/package/scholar-mcp)
+[![test](https://github.com/lstudlo/ScholarMCP/actions/workflows/test.yml/badge.svg)](https://github.com/lstudlo/ScholarMCP/actions/workflows/test.yml)
 [![latest commit](https://img.shields.io/github/last-commit/lstudlo/ScholarMCP)](https://github.com/lstudlo/ScholarMCP/commits/main)
 [![license](https://img.shields.io/github/license/lstudlo/ScholarMCP)](https://github.com/lstudlo/ScholarMCP/blob/main/LICENSE)
 
