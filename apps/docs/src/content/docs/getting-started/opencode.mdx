@@ -7,10 +7,92 @@ sidebar:
 
 This guide shows how to attach ScholarMCP to OpenCode using its MCP management commands and config file format.
 
-## What This Covers
+## What OpenCode Supports
 
-- interactive MCP registration with `opencode mcp add`
-- verification with `opencode mcp list`
+- MCP server management with `opencode mcp add` and `opencode mcp list`
+- local stdio servers launched from an explicit command array
 - manual fallback in `~/.config/opencode/opencode.json`
 
-Detailed setup steps are on this page.
+## Install or Verify the OpenCode CLI
+
+Verify that OpenCode and its MCP command group are installed:
+
+```bash
+opencode --version
+opencode mcp --help
+```
+
+## Add ScholarMCP with the OpenCode CLI
+
+OpenCode exposes `opencode mcp add`, but the current CLI help does not document a stable non-interactive argument format for local stdio servers. Use the interactive flow:
+
+```bash
+opencode mcp add
+```
+
+When prompted, configure ScholarMCP as:
+
+1. Name: `scholar_mcp`
+2. Server type: local
+3. Command:
+   - npm-based: `npx -y scholar-mcp --transport=stdio`
+   - repo-local: `pnpm --filter scholar-mcp dev:stdio`
+4. Enabled: `true`
+5. Environment variables:
+   - `SCHOLAR_MCP_TRANSPORT=stdio`
+   - `SCHOLAR_REQUEST_DELAY_MS=350`
+   - `RESEARCH_ALLOW_REMOTE_PDFS=true`
+   - `RESEARCH_ALLOW_LOCAL_PDFS=true`
+
+## Verify the Registration
+
+List configured MCP servers:
+
+```bash
+opencode mcp list
+```
+
+Confirm that `scholar_mcp` appears and is enabled.
+
+## Manual Fallback If `opencode mcp add` Fails
+
+Add this entry to `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "scholar_mcp": {
+      "type": "local",
+      "command": ["npx", "-y", "scholar-mcp", "--transport=stdio"],
+      "enabled": true,
+      "environment": {
+        "SCHOLAR_MCP_TRANSPORT": "stdio",
+        "SCHOLAR_REQUEST_DELAY_MS": "350",
+        "RESEARCH_ALLOW_REMOTE_PDFS": "true",
+        "RESEARCH_ALLOW_LOCAL_PDFS": "true"
+      }
+    }
+  }
+}
+```
+
+Restart OpenCode, then run:
+
+```bash
+opencode mcp list
+```
+
+## Run from Repo Instead of npm
+
+If you want the latest local ScholarMCP code, replace the command array with the repo-local launcher:
+
+```bash
+pnpm --filter scholar-mcp dev:stdio
+```
+
+In JSON config, that becomes:
+
+```json
+["pnpm", "--filter", "scholar-mcp", "dev:stdio"]
+```

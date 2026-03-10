@@ -7,10 +7,89 @@ sidebar:
 
 This guide shows how to register ScholarMCP in the Codex CLI and desktop app using the shared MCP configuration model.
 
-## What This Covers
+## What OpenAI Codex Supports
 
-- CLI-first registration with `codex mcp add`
-- verification with `codex mcp list` and `codex mcp get`
+- CLI-first MCP registration with `codex mcp add`
+- shared MCP configuration for the Codex CLI and Codex desktop app
 - manual fallback in `~/.codex/config.toml`
 
-Detailed setup steps are on this page.
+## Install or Verify the Codex CLI
+
+Verify that Codex and the MCP commands are available:
+
+```bash
+codex --version
+codex mcp --help
+```
+
+## Add ScholarMCP with the Codex CLI
+
+Using the published npm package:
+
+```bash
+codex mcp add scholar_mcp \
+  --env SCHOLAR_MCP_TRANSPORT=stdio \
+  --env SCHOLAR_REQUEST_DELAY_MS=350 \
+  --env RESEARCH_ALLOW_REMOTE_PDFS=true \
+  --env RESEARCH_ALLOW_LOCAL_PDFS=true \
+  -- npx -y scholar-mcp --transport=stdio
+```
+
+Using a globally installed `scholar-mcp` binary:
+
+```bash
+codex mcp add scholar_mcp \
+  --env SCHOLAR_MCP_TRANSPORT=stdio \
+  --env SCHOLAR_REQUEST_DELAY_MS=350 \
+  --env RESEARCH_ALLOW_REMOTE_PDFS=true \
+  --env RESEARCH_ALLOW_LOCAL_PDFS=true \
+  -- scholar-mcp --transport=stdio
+```
+
+## Verify the Registration
+
+List configured MCP servers:
+
+```bash
+codex mcp list
+```
+
+Inspect the stored server config:
+
+```bash
+codex mcp get scholar_mcp --json
+```
+
+Because Codex shares MCP config between the CLI and the desktop app, a valid registration here should also appear inside the app after restart.
+
+## Manual Fallback If `codex mcp add` Fails
+
+Add this entry to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.scholar_mcp]
+command = "npx"
+args = ["-y", "scholar-mcp", "--transport=stdio"]
+
+[mcp_servers.scholar_mcp.env]
+SCHOLAR_MCP_TRANSPORT = "stdio"
+SCHOLAR_REQUEST_DELAY_MS = "350"
+RESEARCH_ALLOW_REMOTE_PDFS = "true"
+RESEARCH_ALLOW_LOCAL_PDFS = "true"
+```
+
+Then restart Codex and confirm it is loaded:
+
+```bash
+codex mcp list
+```
+
+## Run from Repo Instead of npm
+
+If you are iterating on ScholarMCP locally, use the repo command from the repository root:
+
+```bash
+pnpm --filter scholar-mcp dev:stdio
+```
+
+In that case, replace the `npx -y scholar-mcp --transport=stdio` launch command with the repo-local `pnpm` command in either the CLI registration or the manual TOML config.
