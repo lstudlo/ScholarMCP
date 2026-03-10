@@ -20,6 +20,7 @@ node_modules
 dist
 dist-ssr
 coverage/
+.npm-cache/
 *.local
 *.tgz
 
