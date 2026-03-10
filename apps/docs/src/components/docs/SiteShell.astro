@@ -63,13 +63,11 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
     <div class:list={['grid gap-4 lg:gap-6', isHome ? 'xl:grid-cols-[minmax(0,1fr)]' : 'xl:grid-cols-[17rem_minmax(0,1fr)_17rem]' +
        ' xl:items-start']}>
       {!isHome && (
-        <aside class="hidden self-start xl:block">
-          <div class="sticky top-0">
-            <div class="flex max-h-[100dvh] min-h-0 flex-col overflow-hidden rounded-3xl border border-zinc-200/80 bg-white/75 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
-              <p class="shrink-0 text-[11px] tracking-[0.16em] text-zinc-500 uppercase">Documentation</p>
-              <div class="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
-                <SidebarNav items={sidebar} />
-              </div>
+        <aside class="sticky top-0 hidden self-start xl:block">
+          <div class="flex max-h-[100dvh] min-h-0 flex-col overflow-hidden rounded-3xl border border-zinc-200/80 bg-white/75 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/70">
+            <p class="shrink-0 text-[11px] tracking-[0.16em] text-zinc-500 uppercase">Documentation</p>
+            <div class="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+              <SidebarNav items={sidebar} />
             </div>
           </div>
         </aside>
@@ -97,10 +95,8 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
       </section>
 
       {!isHome && (
-        <aside class="hidden self-start xl:block">
-          <div class="sticky top-0">
-            <TocNav items={toc} />
-          </div>
+        <aside class="sticky top-0 hidden self-start xl:block">
+          <TocNav items={toc} />
         </aside>
       )}
     </div>
