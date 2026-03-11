@@ -85,9 +85,20 @@ pnpm dev:stdio
 
 ## Use with Coding Agents
 
-### Claude Code (recommended)
+ScholarMCP works best over `stdio` for local coding agents. The docs site has full step-by-step guides for [Claude Code](https://scholar-mcp.lstudlo.com/getting-started/claude-code/), [OpenAI Codex](https://scholar-mcp.lstudlo.com/getting-started/openai-codex/), and [OpenCode](https://scholar-mcp.lstudlo.com/getting-started/opencode/). The short forms below cover the common path plus the manual fallback if CLI registration fails.
 
-Register from globally installed binary:
+Shared environment values used below:
+
+```bash
+SCHOLAR_MCP_TRANSPORT=stdio
+SCHOLAR_REQUEST_DELAY_MS=350
+RESEARCH_ALLOW_REMOTE_PDFS=true
+RESEARCH_ALLOW_LOCAL_PDFS=true
+```
+
+### Claude Code
+
+Add with the Claude CLI:
 
 ```bash
 claude mcp add -s user \
@@ -95,45 +106,78 @@ claude mcp add -s user \
   -e SCHOLAR_REQUEST_DELAY_MS=350 \
   -e RESEARCH_ALLOW_REMOTE_PDFS=true \
   -e RESEARCH_ALLOW_LOCAL_PDFS=true \
-  -- scholar-mcp scholar-mcp --transport=stdio
+  scholar_mcp -- npx -y scholar-mcp --transport=stdio
 ```
 
-Register without global install:
-
-```bash
-claude mcp add -s user \
-  -e SCHOLAR_MCP_TRANSPORT=stdio \
-  -e SCHOLAR_REQUEST_DELAY_MS=350 \
-  -e RESEARCH_ALLOW_REMOTE_PDFS=true \
-  -e RESEARCH_ALLOW_LOCAL_PDFS=true \
-  -- scholar_mcp npx -y scholar-mcp --transport=stdio
-```
-
-Check status:
+Verify:
 
 ```bash
 claude mcp get scholar_mcp
 ```
 
-Notes:
-- Keep the `--` before `scholar_mcp` (required by current Claude CLI parsing for multiple `-e` entries).
-- If you need to replace config: `claude mcp remove scholar_mcp -s project`.
+Manual fallback:
+- add `scholar_mcp` under `mcpServers` in `~/.claude.json`
+- use project-local `.mcp.json` if you want the config scoped to the repo
+- keep the `--` separator in the CLI form; Claude needs it to stop parsing flags
 
-### OpenAI Codex App
+### OpenAI Codex
 
-Add to `~/.codex/config.toml`:
+Add with the Codex CLI:
 
-```toml
-[mcp_servers.scholar_mcp]
-command = "npx"
-args = ["-y", "scholar-mcp", "--transport=stdio"]
-
-[mcp_servers.scholar_mcp.env]
-SCHOLAR_MCP_TRANSPORT = "stdio"
-SCHOLAR_REQUEST_DELAY_MS = "350"
-RESEARCH_ALLOW_REMOTE_PDFS = "true"
-RESEARCH_ALLOW_LOCAL_PDFS = "true"
+```bash
+codex mcp add scholar_mcp \
+  --env SCHOLAR_MCP_TRANSPORT=stdio \
+  --env SCHOLAR_REQUEST_DELAY_MS=350 \
+  --env RESEARCH_ALLOW_REMOTE_PDFS=true \
+  --env RESEARCH_ALLOW_LOCAL_PDFS=true \
+  -- npx -y scholar-mcp --transport=stdio
 ```
+
+Verify:
+
+```bash
+codex mcp list
+codex mcp get scholar_mcp --json
+```
+
+Manual fallback:
+- add the server to `~/.codex/config.toml` under `[mcp_servers.scholar_mcp]`
+- Codex CLI and the Codex app share that MCP config model
+
+### OpenCode
+
+Add with the OpenCode CLI:
+
+```bash
+opencode mcp add
+```
+
+Recommended interactive values:
+- name: `scholar_mcp`
+- type: `local`
+- command: `npx -y scholar-mcp --transport=stdio`
+- enabled: `true`
+- env: use the four shared variables above
+
+Verify:
+
+```bash
+opencode mcp list
+```
+
+Manual fallback:
+- add the server to `~/.config/opencode/opencode.json`
+- use `"type": "local"` and a command array like `["npx", "-y", "scholar-mcp", "--transport=stdio"]`
+
+### Run from source
+
+If you are developing ScholarMCP locally, use this launcher instead of `npx -y scholar-mcp --transport=stdio`:
+
+```bash
+pnpm --filter scholar-mcp dev:stdio
+```
+
+Use the same environment values shown above in whichever client you register.
 
 ### Generic MCP clients
 
