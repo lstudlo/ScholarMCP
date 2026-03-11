@@ -85,7 +85,7 @@ pnpm dev:stdio
 
 ## Use with Coding Agents
 
-ScholarMCP works best over `stdio` for local coding agents. The docs site has full step-by-step guides for [Claude Code](https://scholar-mcp.lstudlo.com/getting-started/claude-code/), [OpenAI Codex](https://scholar-mcp.lstudlo.com/getting-started/openai-codex/), and [OpenCode](https://scholar-mcp.lstudlo.com/getting-started/opencode/). The short forms below cover the common path plus the manual fallback if CLI registration fails.
+ScholarMCP works best over `stdio` for local coding agents. The docs site has full step-by-step guides for [Claude Code](https://scholar-mcp.lstudlo.com/getting-started/claude-code/), [OpenAI Codex](https://scholar-mcp.lstudlo.com/getting-started/openai-codex/), and [OpenCode](https://scholar-mcp.lstudlo.com/getting-started/opencode/). Anthropic officially documents `claude mcp add ... -- <command>`, and OpenAI officially documents `codex mcp add ...`; the short forms below keep those CLI flows as the primary setup path.
 
 Shared environment values used below:
 
@@ -102,6 +102,7 @@ Add with the Claude CLI:
 
 ```bash
 claude mcp add -s user \
+  --transport stdio \
   -e SCHOLAR_MCP_TRANSPORT=stdio \
   -e SCHOLAR_REQUEST_DELAY_MS=350 \
   -e RESEARCH_ALLOW_REMOTE_PDFS=true \

@@ -12,6 +12,8 @@ Official references:
 - [Claude Code overview](https://docs.anthropic.com/en/docs/claude-code/overview)
 - [Claude Code MCP](https://docs.anthropic.com/en/docs/claude-code/mcp)
 
+Anthropic documents the CLI setup flow as `claude mcp add [options] <name> -- <command> [args...]`. The ScholarMCP examples below follow that pattern directly.
+
 ## What Claude Code Supports
 
 - user-scoped MCP server registration with `claude mcp add`
@@ -33,6 +35,7 @@ Using the published npm package:
 
 ```bash
 claude mcp add -s user \
+  --transport stdio \
   -e SCHOLAR_MCP_TRANSPORT=stdio \
   -e SCHOLAR_REQUEST_DELAY_MS=350 \
   -e RESEARCH_ALLOW_REMOTE_PDFS=true \
@@ -44,6 +47,7 @@ Using a globally installed `scholar-mcp` binary:
 
 ```bash
 claude mcp add -s user \
+  --transport stdio \
   -e SCHOLAR_MCP_TRANSPORT=stdio \
   -e SCHOLAR_REQUEST_DELAY_MS=350 \
   -e RESEARCH_ALLOW_REMOTE_PDFS=true \
