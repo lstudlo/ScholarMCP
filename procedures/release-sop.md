@@ -16,7 +16,7 @@
 4. Wait for GitHub Actions to finish:
    - `docs`
    - `Publish to npm`
-   - `Publish to GitHub Packages`
+   - `Publish to GitHub Packages`t
 
 5. Verify:
    `npm view scholar-mcp version`
