@@ -103,6 +103,9 @@ export const createScholarMcpServer = (
         query: z.string().min(1).describe('Research query string.'),
         year_range: z
           .object({ start: z.number().int(), end: z.number().int() })
+          .refine(({ start, end }) => start <= end, {
+            message: 'year_range.start must be less than or equal to year_range.end'
+          })
           .optional()
           .describe('Optional publication year range as {start, end}.'),
         fields_of_study: z.array(z.string().min(1)).optional().describe('Optional field-of-study filters.'),
@@ -532,6 +535,9 @@ export const createScholarMcpServer = (
         author: z.string().optional().describe('Author filter value'),
         year_range: z
           .object({ start: z.number().int(), end: z.number().int() })
+          .refine(({ start, end }) => start <= end, {
+            message: 'year_range.start must be less than or equal to year_range.end'
+          })
           .optional()
           .describe('Year range as { start, end }'),
         exact_phrase: z.string().optional().describe('Exact phrase that must appear in results'),
