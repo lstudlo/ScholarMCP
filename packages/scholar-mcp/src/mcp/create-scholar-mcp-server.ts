@@ -102,12 +102,12 @@ export const createScholarMcpServer = (
       inputSchema: {
         query: z.string().min(1).describe('Research query string.'),
         year_range: z
-          .union([
-            z.tuple([z.number().int(), z.number().int()]),
-            z.object({ start: z.number().int(), end: z.number().int() })
-          ])
+          .object({ start: z.number().int(), end: z.number().int() })
+          .refine(({ start, end }) => start <= end, {
+            message: 'year_range.start must be less than or equal to year_range.end'
+          })
           .optional()
-          .describe('Optional publication year range as [start, end] or {start, end}.'),
+          .describe('Optional publication year range as {start, end}.'),
         fields_of_study: z.array(z.string().min(1)).optional().describe('Optional field-of-study filters.'),
         limit: z.number().int().min(1).max(50).default(10).describe('Maximum number of merged results.'),
         sources: z
@@ -118,17 +118,9 @@ export const createScholarMcpServer = (
     },
     async (args): Promise<CallToolResult> => {
       try {
-        const normalizedYearRange = (() => {
-          if (!args.year_range) {
-            return undefined;
-          }
-
-          if (Array.isArray(args.year_range)) {
-            return args.year_range;
-          }
-
-          return [args.year_range.start, args.year_range.end] as [number, number];
-        })();
+        const normalizedYearRange = args.year_range
+          ? [args.year_range.start, args.year_range.end] as [number, number]
+          : undefined;
 
         const result = await researchService.searchLiteratureGraph({
           query: args.query,
@@ -542,12 +534,12 @@ export const createScholarMcpServer = (
         query: z.string().min(1).describe('General search query'),
         author: z.string().optional().describe('Author filter value'),
         year_range: z
-          .union([
-            z.tuple([z.number().int(), z.number().int()]),
-            z.object({ start: z.number().int(), end: z.number().int() })
-          ])
+          .object({ start: z.number().int(), end: z.number().int() })
+          .refine(({ start, end }) => start <= end, {
+            message: 'year_range.start must be less than or equal to year_range.end'
+          })
           .optional()
-          .describe('Year range as [start, end] or { start, end }'),
+          .describe('Year range as { start, end }'),
         exact_phrase: z.string().optional().describe('Exact phrase that must appear in results'),
         exclude_words: z.string().optional().describe('Words that should be excluded from results'),
         title_only: z.boolean().default(false).describe('Restrict search terms to title only'),
@@ -558,17 +550,9 @@ export const createScholarMcpServer = (
     },
     async (args): Promise<CallToolResult> => {
       try {
-        const normalizedYearRange = (() => {
-          if (!args.year_range) {
-            return undefined;
-          }
-
-          if (Array.isArray(args.year_range)) {
-            return args.year_range;
-          }
-
-          return [args.year_range.start, args.year_range.end] as [number, number];
-        })();
+        const normalizedYearRange = args.year_range
+          ? [args.year_range.start, args.year_range.end] as [number, number]
+          : undefined;
 
         const result = await service.searchAdvanced({
           query: args.query,
