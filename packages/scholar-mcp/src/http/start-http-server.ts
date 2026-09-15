@@ -118,6 +118,19 @@ const attachCorsHeaders = (response: Response, origin: string | undefined): Resp
   return response;
 };
 
+// resolveTransport() returns either a TransportResolution or a Response that should be
+// sent straight back to the client (e.g. 404 "Session not found", 400 "Invalid JSON body").
+// Distinguishing the two with `resolved instanceof Response` is unreliable: if two copies
+// of the Fetch API's Response class end up loaded in the same process (one native to
+// Node, one bundled by a dependency such as hono or @hono/node-server), an object built
+// from one constructor fails `instanceof` against the other even though it's a
+// structurally identical Response. When that happens every early-return Response from
+// resolveTransport is silently treated as a TransportResolution instead, and the request
+// handler crashes on `transport.handleRequest()` with `transport` undefined. Checking for
+// the shape we actually need (a `transport` property) is robust to that mismatch.
+const isTransportResolution = (value: TransportResolution | Response): value is TransportResolution =>
+  'transport' in value;
+
 const isStale = (runtime: SessionRuntime, now: number, config: AppConfig): boolean =>
   now - runtime.lastSeenAt > config.httpSessionTtlMs;
 
@@ -297,7 +310,8 @@ export const createHttpApp = (
 
   app.onError((error, c) => {
     logger.error('Unhandled HTTP runtime error', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
     });
 
     return c.json(
@@ -369,7 +383,7 @@ export const createHttpApp = (
     const origin = c.req.header('origin');
 
     const resolved = await resolveTransport(c.req.raw);
-    if (resolved instanceof Response) {
+    if (!isTransportResolution(resolved)) {
       return attachCorsHeaders(resolved, origin);
     }
 
@@ -380,7 +394,8 @@ export const createHttpApp = (
       response = await transport.handleRequest(c.req.raw, parsedBody === undefined ? undefined : { parsedBody });
     } catch (error) {
       logger.error('MCP HTTP request handling failed', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
       });
 
       response = Response.json(
