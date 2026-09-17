@@ -80,6 +80,9 @@ console.log(`Starting ${releaseType} release...`);
 ensureCleanTree();
 
 run("pnpm", ["--filter", "scholar-mcp", "release:check"]);
+run("node", ["--test", "scripts/generate-docs-api.test.mjs", "scripts/generate-docs-releases.test.mjs"]);
+run("pnpm", ["docs:build"]);
+run("pnpm", ["--filter", "scholar-mcp-docs", "test"]);
 ensureCleanTree();
 run("npm", ["version", releaseType, "--no-git-tag-version"], pkgDir);
 
@@ -88,8 +91,8 @@ const tag = `v${version}`;
 const branch = runCapture("git", ["rev-parse", "--abbrev-ref", "HEAD"], repoRoot);
 const releaseFiles = [
   "packages/scholar-mcp/package.json",
-  "apps/docs/src/content/docs/reference/mcp-tools.mdx",
-  "apps/docs/src/content/docs/releases/index.mdx",
+  "apps/docs/src/content/docs/reference/mcp-tools.md",
+  "apps/docs/src/content/docs/releases/index.md",
 ];
 
 run("pnpm", ["docs:sync"], repoRoot);
@@ -103,8 +106,10 @@ if (isSuccess("git", ["rev-parse", "-q", "--verify", `refs/tags/${tag}`], repoRo
 }
 run("git", ["tag", "-a", tag, "-m", tag], repoRoot);
 
-run("git", ["push", releaseRemote, branch], repoRoot);
-run("git", ["push", releaseRemote, tag], repoRoot);
+run("pnpm", ["docs:sync"], repoRoot);
+ensureCleanTree();
+
+run("git", ["push", "--atomic", releaseRemote, branch, tag], repoRoot);
 
 const remoteTag = runCapture(
   "git",
@@ -122,4 +127,4 @@ if (isSuccess("gh", ["release", "view", tag], repoRoot)) {
   run("gh", ["release", "create", tag, "--verify-tag", "--generate-notes"], repoRoot);
 }
 
-console.log(`\nRelease completed: ${tag}`);
+console.log(`\nRelease created: ${tag}. Verify both registry workflows before declaring it published.`);

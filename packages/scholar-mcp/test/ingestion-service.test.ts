@@ -7,6 +7,7 @@ import { parseConfig } from '../src/config.js';
 import { Logger } from '../src/core/logger.js';
 import { IngestionError } from '../src/research/errors.js';
 import { IngestionService } from '../src/research/ingestion-service.js';
+import { PDFParse } from 'pdf-parse';
 
 const makeService = (overrides?: Parameters<typeof parseConfig>[0], literatureService?: Partial<Record<string, unknown>>) =>
   new IngestionService(
@@ -79,13 +80,18 @@ describe('IngestionService', () => {
     });
 
     expect(resolved.pdfUrl).toBe('https://example.org/open-access.pdf');
-    expect(landingSpy).toHaveBeenCalled();
+    expect(landingSpy).not.toHaveBeenCalled();
 
     const direct = await (service as never as { resolveSource: (input: unknown) => Promise<any> }).resolveSource({
       paperUrl: 'https://example.org/direct.pdf',
       pdfUrl: 'https://example.org/manual.pdf'
     });
     expect(direct.pdfUrl).toBe('https://example.org/manual.pdf');
+    expect(landingSpy).not.toHaveBeenCalled();
+
+    const signedPdf = await (service as any).resolveSource({ paperUrl: 'https://example.org/paper.pdf?download=1' });
+    expect(signedPdf.pdfUrl).toBe('https://example.org/paper.pdf?download=1');
+    expect(landingSpy).not.toHaveBeenCalled();
   });
 
   it('discovers pdf urls from landing pages and direct pdf responses', async () => {
@@ -229,5 +235,39 @@ describe('IngestionService', () => {
       status: 'failed',
       error: 'bad source'
     });
+  });
+
+  it('rejects oversized downloads and fake PDF MIME types', async () => {
+    const service = makeService();
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('%PDF', { headers: { 'content-length': String(51 * 1024 * 1024) } }))
+      .mockResolvedValueOnce(new Response('<html>not a PDF</html>', { headers: { 'content-type': 'application/pdf' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect((service as any).obtainPdfFile({ pdfUrl: 'https://example.org/huge.pdf' })).rejects.toThrow('byte limit');
+    await expect((service as any).obtainPdfFile({ pdfUrl: 'https://example.org/fake.pdf' })).rejects.toThrow('not a PDF');
+  });
+
+  it('aborts stalled PDF downloads and destroys a parser when parsing fails', async () => {
+    const service = makeService();
+    const signal = AbortSignal.abort(new Error('download timeout'));
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(signal);
+    vi.stubGlobal('fetch', vi.fn(async (_url, init) => {
+      init.signal.throwIfAborted();
+      return new Response('%PDF');
+    }));
+    await expect((service as any).obtainPdfFile({ pdfUrl: 'https://example.org/stalled.pdf' })).rejects.toThrow('download timeout');
+    expect(timeoutSpy).toHaveBeenCalledWith(20_000);
+
+    const tempDir = mkdtempSync(join(tmpdir(), 'scholar-parser-cleanup-'));
+    const filePath = join(tempDir, 'paper.pdf');
+    writeFileSync(filePath, '%PDF-1.4\n');
+    const destroy = vi.spyOn(PDFParse.prototype, 'destroy').mockResolvedValue(undefined);
+    vi.spyOn(PDFParse.prototype, 'getText').mockRejectedValue(new Error('malformed PDF'));
+    try {
+      await expect((service as any).parseWithSimplePdf(filePath)).rejects.toThrow('malformed PDF');
+      expect(destroy).toHaveBeenCalledOnce();
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 });

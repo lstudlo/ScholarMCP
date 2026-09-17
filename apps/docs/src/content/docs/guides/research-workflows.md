@@ -12,6 +12,21 @@ sidebar:
 3. Use `search_google_scholar_advanced` when you need stricter author/year/phrase filtering.
 4. Save shortlisted papers for ingestion.
 
+Both search tools accept `year_range` as an object. Arrays are no longer
+accepted by the MCP schema:
+
+```json
+{
+  "query": "retrieval-augmented generation",
+  "year_range": { "start": 2022, "end": 2026 },
+  "limit": 15
+}
+```
+
+`start` must not exceed `end`. Federated search reports provider failures in
+`providerErrors`, so inspect that field before treating partial results as a
+complete search.
+
 Prompt example:
 
 > Find 15 papers from 2022-2026 on retrieval-augmented generation evaluation methods. Prioritize benchmark-heavy studies.
@@ -19,7 +34,7 @@ Prompt example:
 ## Workflow 2: Full-Text Extraction Pipeline
 
 1. Start ingestion with `ingest_paper_fulltext` using DOI, paper URL, direct PDF URL, or local PDF path.
-2. Poll with `get_ingestion_status` until `succeeded`.
+2. Poll with `get_ingestion_status` until `succeeded` or `failed`; inspect `error` on failure.
 3. Extract structured outputs with `extract_granular_paper_details`.
 4. Use extracted claims, methods, and limitations in your notes or draft.
 
@@ -33,6 +48,10 @@ Prompt example:
 2. Generate formatted references via `build_reference_list`.
 3. Validate inline citations and references using `validate_manuscript_citations`.
 4. Iterate until missing/duplicate citation issues are resolved.
+
+Citation validation checks supported numeric and parenthetical author-year
+patterns. It is a consistency check, not evidence that a paper supports a claim.
+Review the suggested sources and bibliography before using them in a manuscript.
 
 Prompt example:
 

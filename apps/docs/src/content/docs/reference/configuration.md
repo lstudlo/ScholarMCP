@@ -35,7 +35,7 @@ Boolean values accept `true/false`, `1/0`, `yes/no`, and `on/off`.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `SCHOLAR_MCP_API_KEY` | unset | If set, requires `Authorization: Bearer <key>` for HTTP requests. |
+| `SCHOLAR_MCP_API_KEY` | unset | Requires `Authorization: Bearer <key>` on the MCP endpoint. Root, health, and OPTIONS remain public. |
 | `SCHOLAR_MCP_ALLOWED_ORIGINS` | unset | Comma-separated CORS allow-list for origins. |
 | `SCHOLAR_MCP_ALLOWED_HOSTS` | unset | Comma-separated host header allow-list. |
 
@@ -56,11 +56,11 @@ Boolean values accept `true/false`, `1/0`, `yes/no`, and `on/off`.
 | Variable | Default | Description |
 | --- | --- | --- |
 | `RESEARCH_OPENALEX_BASE_URL` | `https://api.openalex.org` | OpenAlex API base URL. |
-| `RESEARCH_OPENALEX_API_KEY` | unset | Optional OpenAlex API key. |
+| `RESEARCH_OPENALEX_API_KEY` | unset | OpenAlex key sent in an Authorization header for searches and DOI lookups. |
 | `RESEARCH_CROSSREF_BASE_URL` | `https://api.crossref.org` | Crossref API base URL. |
 | `RESEARCH_SEMANTIC_SCHOLAR_BASE_URL` | `https://api.semanticscholar.org/graph/v1` | Semantic Scholar API base URL. |
 | `RESEARCH_SEMANTIC_SCHOLAR_API_KEY` | unset | Optional Semantic Scholar API key. |
-| `RESEARCH_TIMEOUT_MS` | `20000` | Timeout for federated research HTTP requests. |
+| `RESEARCH_TIMEOUT_MS` | `20000` | Per-request timeout for providers, PDF downloads, landing pages, and GROBID. |
 | `RESEARCH_RETRY_ATTEMPTS` | `2` | Retry count for federated requests. |
 | `RESEARCH_RETRY_DELAY_MS` | `800` | Base retry delay for federated requests. |
 | `RESEARCH_REQUEST_DELAY_MS` | `100` | Inter-request pacing for federated providers. |
@@ -77,9 +77,13 @@ Boolean values accept `true/false`, `1/0`, `yes/no`, and `on/off`.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `RESEARCH_SEMANTIC_ENGINE` | `cloud-llm` | Extraction engine mode (`cloud-llm` or `none`). |
-| `RESEARCH_CLOUD_MODEL` | `gpt-4.1-mini` | Model name used by cloud extraction engine. |
+| `RESEARCH_SEMANTIC_ENGINE` | `cloud-llm` | Reserved setting, currently unused. Extraction uses local text patterns. |
+| `RESEARCH_CLOUD_MODEL` | `gpt-4.1-mini` | Reserved setting, currently unused. No cloud LLM request is made. |
 | `RESEARCH_GRAPH_CACHE_TTL_MS` | `300000` | Literature graph cache TTL in milliseconds. |
 | `RESEARCH_GRAPH_MAX_CACHE_ENTRIES` | `300` | Maximum cached graph entries. |
 | `RESEARCH_GRAPH_PROVIDER_RESULT_MULTIPLIER` | `2` | Per-provider over-fetch multiplier before merge/ranking. |
 | `RESEARCH_GRAPH_FUZZY_TITLE_THRESHOLD` | `0.84` | Fuzzy title dedupe threshold for merged works. |
+
+OpenAlex requests are capped at 100 results per call. The graph cache, ingestion
+jobs, and parsed documents are kept in memory and reset when the process stops.
+See [full-text limits and access considerations](/guides/fulltext-ingestion/).

@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -24,11 +24,13 @@ jobs:
           version: 10
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
-          registry-url: 'https://registry.npmjs.org'
-          cache: pnpm
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Setup npm for trusted publishing
+        run: npm install --global npm@11
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -48,4 +50,15 @@ jobs:
           echo "Version verified: $VERSION"
 
       - name: Publish to npm with provenance
-        run: pnpm --filter scholar-mcp publish --provenance --access public --no-git-checks
+        working-directory: packages/scholar-mcp
+        run: npm publish --provenance --access public --registry https://registry.npmjs.org
+
+      - name: Verify published npm version
+        working-directory: packages/scholar-mcp
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view "scholar-mcp@$VERSION" version --registry https://registry.npmjs.org)
+          test "$PUBLISHED" = "$VERSION"
+          cd "$(mktemp -d)"
+          INSTALLED=$(npm exec --yes --package="scholar-mcp@$VERSION" -- scholar-mcp --version)
+          test "$INSTALLED" = "$VERSION"

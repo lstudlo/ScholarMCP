@@ -136,7 +136,7 @@ export async function renderDocEntry(entry: DocsEntry) {
   return render(entry);
 }
 
-export function breadcrumbParts(page: DocsPageRecord) {
+export function breadcrumbParts(page: DocsPageRecord, pages: DocsPageRecord[]) {
   const normalized = normalizeDocId(page.id);
   if (normalized === 'index') return [];
   const parts = normalized.split('/');
@@ -145,9 +145,11 @@ export function breadcrumbParts(page: DocsPageRecord) {
   for (let index = 0; index < parts.length; index += 1) {
     const segment = parts[index]!;
     const id = parts.slice(0, index + 1).join('/');
+    const target = pages.find((item) => normalizeDocId(item.id) === id)
+      ?? pages.find((item) => item.id.startsWith(`${id}/`));
     crumbs.push({
       label: index === parts.length - 1 ? page.label : SECTION_LABELS.get(segment) ?? titleCase(segment),
-      href: `/${id}/`,
+      href: target?.href ?? '/',
       isCurrent: index === parts.length - 1
     });
   }

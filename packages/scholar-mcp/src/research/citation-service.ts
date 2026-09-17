@@ -211,8 +211,10 @@ const parseNumericInlineCitations = (manuscriptText: string): { numbers: number[
   };
 };
 
-const parseAuthorYearCitations = (manuscriptText: string): Array<{ author: string; raw: string }> => {
-  const citations: Array<{ author: string; raw: string }> = [];
+interface AuthorYearCitation { author: string; year: number; raw: string }
+
+const parseAuthorYearCitations = (manuscriptText: string): AuthorYearCitation[] => {
+  const citations: AuthorYearCitation[] = [];
 
   for (const match of manuscriptText.matchAll(/\(([^()]*?(?:19|20)\d{2}[a-z]?[^()]*)\)/g)) {
     const raw = match[0] ?? '';
@@ -220,13 +222,14 @@ const parseAuthorYearCitations = (manuscriptText: string): Array<{ author: strin
     const parts = block.split(';').map((value) => normalizeWhitespace(value)).filter((value) => value.length > 0);
 
     for (const part of parts) {
-      const authorMatch = part.match(/^([A-Z][A-Za-z'`\-]+)(?:\s+et al\.)?(?:\s*&\s+[A-Z][A-Za-z'`\-]+)?\s*,\s*(?:19|20)\d{2}[a-z]?/);
-      if (!authorMatch?.[1]) {
+      const authorMatch = part.match(/^([A-Z][A-Za-z'`\-]+)(?:\s+et al\.)?(?:\s*&\s+[A-Z][A-Za-z'`\-]+)?\s*,\s*((?:19|20)\d{2})[a-z]?/);
+      if (!authorMatch?.[1] || !authorMatch[2]) {
         continue;
       }
 
       citations.push({
         author: authorMatch[1],
+        year: Number(authorMatch[2]),
         raw
       });
     }
@@ -284,6 +287,12 @@ const findReferenceSource = (reference: ReferenceEntry): string | null => {
   return null;
 };
 
+const matchesAuthorYear = (reference: ReferenceEntry, citation: AuthorYearCitation): boolean =>
+  findReferenceYear(reference) === citation.year &&
+  findReferenceAuthors(reference).some((name) =>
+    name.toLowerCase().split(/[\s,]+/).includes(citation.author.toLowerCase())
+  );
+
 const buildCompletenessDiagnostic = (reference: ReferenceEntry, index: number): ReferenceCompletenessDiagnostic => {
   const missingElements: Array<'author' | 'year' | 'title' | 'source'> = [];
   const suggestions: string[] = [];
@@ -337,7 +346,7 @@ const findDuplicateReferences = (references: ReferenceEntry[]): string[] => {
     const doi = normalizeDoi(reference.sourceWork.doi);
     const title = normalizeWhitespace(reference.sourceWork.title ?? reference.formatted)
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/[^\p{L}\p{N}\s]/gu, ' ')
       .replace(/\s+/g, ' ')
       .trim();
     const year = reference.sourceWork.year ?? findReferenceYear(reference) ?? 'na';
@@ -475,7 +484,7 @@ export class CitationService {
     }
 
     for (const citation of authorYearCitations) {
-      const matched = references.some((entry) => entry.formatted.toLowerCase().includes(citation.author.toLowerCase()));
+      const matched = references.some((entry) => matchesAuthorYear(entry, citation));
       if (!matched) {
         missingReferences.add(citation.raw);
       }
@@ -486,7 +495,7 @@ export class CitationService {
         label: `[${index + 1}] ${entry.formatted}`,
         referenced:
           numericCitations.includes(index + 1) ||
-          authorYearCitations.some((citation) => entry.formatted.toLowerCase().includes(citation.author.toLowerCase()))
+          authorYearCitations.some((citation) => matchesAuthorYear(entry, citation))
       }))
       .filter((entry) => !entry.referenced)
       .map((entry) => entry.label);

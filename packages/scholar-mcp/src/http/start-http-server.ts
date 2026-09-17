@@ -49,7 +49,8 @@ const normalizeHostHeader = (hostHeader: string): { full: string; hostname: stri
 const isLoopbackOrigin = (origin: string): boolean => {
   try {
     const parsed = new URL(origin);
-    return LOCAL_HOSTS.has(parsed.hostname.toLowerCase());
+    return ['http:', 'https:'].includes(parsed.protocol) &&
+      LOCAL_HOSTS.has(normalizeHostHeader(parsed.hostname).hostname);
   } catch {
     return false;
   }
@@ -359,11 +360,11 @@ export const createHttpApp = (
     const authorization = c.req.header('authorization');
 
     if (!isHostAllowed(hostHeader, config)) {
-      return attachCorsHeaders(c.json({ error: 'Forbidden host header' }, 403), origin);
+      return c.json({ error: 'Forbidden host header' }, 403);
     }
 
     if (!isOriginAllowed(origin, config)) {
-      return attachCorsHeaders(c.json({ error: 'Forbidden origin' }, 403), origin);
+      return c.json({ error: 'Forbidden origin' }, 403);
     }
 
     if (c.req.method !== 'OPTIONS' && !isAuthorized(authorization, config)) {

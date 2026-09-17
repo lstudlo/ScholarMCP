@@ -26,7 +26,7 @@ const { Content, headings } = await renderDocEntry(page.entry);
 const title = page.id === 'index' ? `${page.label} | ScholarMCP` : `${page.label} | ScholarMCP Docs`;
 const description = page.entry.data.description ?? 'ScholarMCP documentation';
 const isHome = page.id === 'index' || page.entry.data.template === 'splash';
-const crumbs = breadcrumbParts(page);
+const crumbs = breadcrumbParts(page, context.pages);
 
 type Heading = { depth: number; slug: string; text: string };
 const toc = (headings as Heading[]).filter((h) => h.depth >= 2 && h.depth <= 3);

@@ -18,8 +18,8 @@ Generate CSL-formatted bibliography and BibTeX entries from manuscript context o
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `style` | enum (apa, ieee, chicago, vancouver) | Yes | 'apa' | - |
-| `locale` | string | Yes | 'en-US' | - |
+| `style` | enum (apa, ieee, chicago, vancouver) | No | 'apa' | - |
+| `locale` | string | No | 'en-US' | - |
 | `manuscript_text` | string | No | - | - |
 | `works` | array | No | - | - |
 
@@ -34,7 +34,7 @@ Extract claims, methods, limitations, datasets, metrics, and section-aware summa
 | --- | --- | --- | --- | --- |
 | `document_id` | string | Yes | - | - |
 | `sections` | array | No | - | - |
-| `include_references` | boolean | Yes | true | - |
+| `include_references` | boolean | No | true | - |
 
 ## `get_author_info`
 
@@ -46,8 +46,8 @@ Retrieve a Google Scholar author profile and top publications by author name.
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `author_name` | string | Yes | - | Full author name to resolve in Google Scholar |
-| `max_publications` | number | Yes | 5 | - |
-| `language` | string | Yes | config.scholarLanguage | - |
+| `max_publications` | number | No | 5 | - |
+| `language` | string | No | config.scholarLanguage | - |
 
 ## `get_ingestion_status`
 
@@ -73,8 +73,8 @@ Resolve and ingest a full-text PDF from DOI/URL/local file, then parse into a st
 | `paper_url` | string | No | - | Landing page URL for the paper. |
 | `pdf_url` | string | No | - | Direct PDF URL. |
 | `local_pdf_path` | string | No | - | Local absolute or workspace-relative PDF path. |
-| `parse_mode` | enum (auto, grobid, simple) | Yes | 'auto' | - |
-| `ocr_enabled` | boolean | Yes | true | Reserved for OCR-capable parser modes. |
+| `parse_mode` | enum (auto, grobid, simple) | No | 'auto' | - |
+| `ocr_enabled` | boolean | No | true | Reserved for OCR-capable parser modes. |
 
 ## `search_google_scholar_advanced`
 
@@ -87,13 +87,13 @@ Search Google Scholar using keyword, author, year-range, phrase, and exclusion f
 | --- | --- | --- | --- | --- |
 | `query` | string | Yes | - | General search query |
 | `author` | string | No | - | Author filter value |
-| `year_range` | number | No | - | Year range as [start, end] or \{ start, end \} |
+| `year_range` | object | No | - | Year range as \{ start, end \} |
 | `exact_phrase` | string | No | - | Exact phrase that must appear in results |
 | `exclude_words` | string | No | - | Words that should be excluded from results |
-| `title_only` | boolean | Yes | false | Restrict search terms to title only |
-| `num_results` | number | Yes | 5 | - |
-| `start` | number | Yes | 0 | - |
-| `language` | string | Yes | config.scholarLanguage | - |
+| `title_only` | boolean | No | false | Restrict search terms to title only |
+| `num_results` | number | No | 5 | - |
+| `start` | number | No | 0 | - |
+| `language` | string | No | config.scholarLanguage | - |
 
 ## `search_google_scholar_key_words`
 
@@ -105,9 +105,9 @@ Search Google Scholar using keywords and return paper metadata.
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `query` | string | Yes | - | Search query string |
-| `num_results` | number | Yes | 5 | Number of results to return |
-| `start` | number | Yes | 0 | Offset for pagination (0, 10, 20, ...) |
-| `language` | string | Yes | config.scholarLanguage | Google Scholar language code (e.g., en) |
+| `num_results` | number | No | 5 | Number of results to return |
+| `start` | number | No | 0 | Offset for pagination (0, 10, 20, ...) |
+| `language` | string | No | config.scholarLanguage | Google Scholar language code (e.g., en) |
 
 ## `search_literature_graph`
 
@@ -119,10 +119,10 @@ Search multiple scholarly metadata providers (OpenAlex, Crossref, Semantic Schol
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `query` | string | Yes | - | Research query string. |
-| `year_range` | number | No | - | Optional publication year range as [start, end] or \{start, end\}. |
+| `year_range` | object | No | - | Optional publication year range as \{start, end\}. |
 | `fields_of_study` | array | No | - | Optional field-of-study filters. |
-| `limit` | number | Yes | 10 | Maximum number of merged results. |
-| `sources` | enum (openalex, crossref, semantic_scholar, scholar_scrape) | No | - | Optional source allow-list. |
+| `limit` | number | No | 10 | Maximum number of merged results. |
+| `sources` | array | No | - | Optional source allow-list. |
 
 ## `suggest_contextual_citations`
 
@@ -135,9 +135,9 @@ Recommend citations from the federated literature graph based on manuscript cont
 | --- | --- | --- | --- | --- |
 | `manuscript_text` | string | Yes | - | - |
 | `cursor_context` | string | No | - | - |
-| `style` | enum (apa, ieee, chicago, vancouver) | Yes | 'apa' | - |
-| `k` | number | Yes | 10 | - |
-| `recency_bias` | number | Yes | 0.5 | - |
+| `style` | enum (apa, ieee, chicago, vancouver) | No | 'apa' | - |
+| `k` | number | No | 10 | - |
+| `recency_bias` | number | No | 0.5 | - |
 
 ## `validate_manuscript_citations`
 

@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -24,12 +24,12 @@ jobs:
           version: 10
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           registry-url: https://npm.pkg.github.com
           scope: "@${{ github.repository_owner }}"
-          cache: pnpm
+          package-manager-cache: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -76,6 +76,20 @@ jobs:
           echo "Prepared package for GitHub Packages as $GH_NAME"
 
       - name: Publish to GitHub Packages
-        run: pnpm --filter scholar-mcp publish --no-git-checks --registry https://npm.pkg.github.com
+        working-directory: packages/scholar-mcp
+        run: npm publish --registry https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify published GitHub Packages version
+        working-directory: packages/scholar-mcp
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view "$NAME@$VERSION" version --registry https://npm.pkg.github.com)
+          test "$PUBLISHED" = "$VERSION"
+          cd "$(mktemp -d)"
+          INSTALLED=$(npm exec --yes --package="$NAME@$VERSION" -- scholar-mcp --version)
+          test "$INSTALLED" = "$VERSION"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

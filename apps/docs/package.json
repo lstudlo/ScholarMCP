@@ -10,16 +10,19 @@
     "dev": "pnpm run sync:generated && astro dev",
     "build": "pnpm run sync:generated && astro check && astro build",
     "check": "pnpm run sync:generated && astro check",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test": "node --experimental-strip-types --test test/*.test.mjs"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.3.13",
-    "@tailwindcss/vite": "^4.2.0",
-    "astro": "latest",
-    "tailwindcss": "^4.2.0"
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.3",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.6",
+    "@astrojs/check": "^0.9.10",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22.14.0"
   }
 }

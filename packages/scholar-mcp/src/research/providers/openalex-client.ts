@@ -97,15 +97,12 @@ export class OpenAlexClient {
   async searchWorks(query: string, limit: number): Promise<ProviderWork[]> {
     const url = new URL('/works', this.config.researchOpenAlexBaseUrl);
     url.searchParams.set('search', query);
-    url.searchParams.set('per-page', String(limit));
-
-    if (this.config.researchOpenAlexApiKey) {
-      url.searchParams.set('api_key', this.config.researchOpenAlexApiKey);
-    }
+    url.searchParams.set('per-page', String(Math.min(limit, 100)));
 
     const payload = await this.httpClient.fetchJson<OpenAlexResponse>({
       provider: 'openalex',
-      url
+      url,
+      headers: this.authHeaders()
     });
 
     return (payload.results ?? []).map((item) => this.mapWork(item, url.toString()));
@@ -122,10 +119,17 @@ export class OpenAlexClient {
 
     const payload = await this.httpClient.fetchJson<OpenAlexWork>({
       provider: 'openalex',
-      url
+      url,
+      headers: this.authHeaders()
     });
 
     return this.mapWork(payload, url.toString());
+  }
+
+  private authHeaders(): Record<string, string> {
+    return this.config.researchOpenAlexApiKey
+      ? { authorization: `Bearer ${this.config.researchOpenAlexApiKey}` }
+      : {};
   }
 
   private mapWork(item: OpenAlexWork, sourceUrl: string): ProviderWork {

@@ -6,7 +6,7 @@ import ts from 'typescript';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 const sourcePath = resolve(repoRoot, 'packages/scholar-mcp/src/mcp/create-scholar-mcp-server.ts');
-const outputMdxPath = resolve(repoRoot, 'apps/docs/src/content/docs/reference/mcp-tools.mdx');
+const outputMarkdownPath = resolve(repoRoot, 'apps/docs/src/content/docs/reference/mcp-tools.md');
 
 const sourceText = readFileSync(sourcePath, 'utf8');
 const sourceFile = ts.createSourceFile(sourcePath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -91,25 +91,8 @@ const extractStringProperty = (obj, key) => {
 };
 
 const inferType = (exprText) => {
-  const checks = [
-    ['enum', /z\.enum\(/],
-    ['array', /z\.array\(/],
-    ['string', /z\.string\(/],
-    ['number', /z\.number\(/],
-    ['boolean', /z\.boolean\(/],
-    ['object', /z\.object\(/],
-    ['union', /z\.union\(/],
-    ['tuple', /z\.tuple\(/],
-    ['literal', /z\.literal\(/]
-  ];
-
-  for (const [type, pattern] of checks) {
-    if (pattern.test(exprText)) {
-      return type;
-    }
-  }
-
-  return 'unknown';
+  // Use the outer constructor, not a nested object's field or array element.
+  return exprText.match(/^z\s*\.\s*(enum|array|string|number|boolean|object|union|tuple|literal)\s*\(/)?.[1] ?? 'unknown';
 };
 
 const extractDescription = (exprText) => {
@@ -171,12 +154,13 @@ const parseInputSchema = (obj) => {
     const expressionText = getNodeText(prop.initializer);
     const description = extractDescription(expressionText);
     const defaultValue = extractDefault(expressionText);
-    const enumValues = extractEnumValues(expressionText);
+    const type = inferType(expressionText);
+    const enumValues = type === 'enum' ? extractEnumValues(expressionText) : null;
 
     params.push({
       name: paramName,
-      type: inferType(expressionText),
-      required: !/\.optional\(/.test(expressionText),
+      type,
+      required: !/\.(optional|default)\(/.test(expressionText),
       default: defaultValue,
       description,
       enumValues,
@@ -258,7 +242,7 @@ const renderToolSection = (tool) => {
   return lines.join('\n');
 };
 
-const mdx = `---
+const markdown = `---
 title: MCP Tools Reference
 description: Generated tool reference from source code.
 sidebar:
@@ -271,7 +255,7 @@ Total tools: **${tools.length}**.
 
 ${tools.map(renderToolSection).join('\n')}`;
 
-mkdirSync(dirname(outputMdxPath), { recursive: true });
-writeFileSync(outputMdxPath, `${mdx}\n`, 'utf8');
+mkdirSync(dirname(outputMarkdownPath), { recursive: true });
+writeFileSync(outputMarkdownPath, `${markdown}\n`, 'utf8');
 
 process.stdout.write(`Generated MCP docs for ${tools.length} tools.\n`);

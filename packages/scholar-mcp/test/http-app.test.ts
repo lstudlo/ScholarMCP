@@ -266,6 +266,18 @@ describe('createHttpApp', () => {
     );
 
     expect(badOrigin.status).toBe(403);
+    expect(badOrigin.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  it('accepts IPv6 loopback origins and rejects non-HTTP origins', async () => {
+    const { createHttpApp } = await import('../src/http/start-http-server.js');
+    const runtime = createHttpApp(makeConfig({ SCHOLAR_MCP_HOST: '::1' }), {} as never, {} as never, new Logger('error'));
+    const request = (origin: string) => new Request('http://[::1]/mcp', {
+      method: 'OPTIONS', headers: { host: '[::1]:3000', origin }
+    });
+    expect((await runtime.app.fetch(request('http://[::1]:3000'))).status).toBe(204);
+    expect((await runtime.app.fetch(request('file://localhost'))).status).toBe(403);
+    await runtime.shutdown();
   });
 
   it('enforces bearer auth when configured', async () => {

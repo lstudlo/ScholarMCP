@@ -50,7 +50,7 @@ const scoreFromCitations = (citations: number): number => {
 const normalizeTitleKey = (title: string): string =>
   normalizeWhitespace(title)
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '');
+    .replace(/[^\p{L}\p{N}\s]/gu, '');
 
 const tokenSetFromTitle = (title: string): Set<string> => new Set(tokenizeForRanking(title));
 
@@ -102,7 +102,7 @@ const yearsCompatible = (a: number | null, b: number | null): boolean => !a || !
 const normalizeAuthorName = (name: string): string =>
   normalizeWhitespace(name)
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '');
+    .replace(/[^\p{L}\p{N}\s]/gu, '');
 
 const sharesAuthorSignal = (
   left: Array<{ name: string; authorId?: string | null }>,
@@ -236,6 +236,10 @@ export class LiteratureService {
           continue;
         }
 
+        if (normalizedDoi && candidate.doi && normalizedDoi !== candidate.doi) {
+          continue;
+        }
+
         if (yearsCompatible(candidate.year, work.year) && sharesAuthorSignal(candidate.authors, work.authors)) {
           return key;
         }
@@ -246,6 +250,9 @@ export class LiteratureService {
       let bestSimilarity = 0;
 
       for (const [key, candidate] of merged.entries()) {
+        if (normalizedDoi && candidate.doi && normalizedDoi !== candidate.doi) {
+          continue;
+        }
         if (!yearsCompatible(candidate.year, work.year)) {
           continue;
         }
@@ -283,7 +290,7 @@ export class LiteratureService {
       const relevanceScore = 0.6 * work.score + 0.3 * scoreFromCitations(work.citationCount) + 0.1 * confidence;
 
       if (!targetKey) {
-        const generatedKey = normalizedDoi ?? `title:${titleKey}:year:${work.year ?? 'na'}`;
+        const generatedKey = normalizedDoi ?? `${work.provider}:${work.providerId}:${merged.size}`;
 
         merged.set(generatedKey, {
           title: work.title,
@@ -395,7 +402,7 @@ export class LiteratureService {
 
     try {
       const openAlexExact = await this.openAlexClient.getWorkByDoi(normalized);
-      if (openAlexExact) {
+      if (openAlexExact && normalizeDoi(openAlexExact.doi) === normalized) {
         return {
           title: openAlexExact.title,
           abstract: openAlexExact.abstract,
@@ -444,7 +451,6 @@ export class LiteratureService {
     return (
       result.results.find((item) => normalizeDoi(item.doi) === normalized) ??
       result.results.find((item) => normalizeDoi(item.externalIds.doi) === normalized) ??
-      result.results[0] ??
       null
     );
   }

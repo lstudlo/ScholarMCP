@@ -1,4 +1,5 @@
 import { getDocsPages, renderDocEntry } from '../lib/docs';
+import type { SearchRecord } from '../lib/search';
 
 export const prerender = true;
 
@@ -14,8 +15,9 @@ export async function GET() {
         title: page.label,
         description: page.entry.data.description ?? '',
         section: page.sectionLabel ?? 'Documentation',
-        headings: headings.map((h) => h.text)
-      };
+        headings: headings.map((h) => h.text),
+        body: page.entry.body ?? ''
+      } satisfies SearchRecord;
     })
   );
 

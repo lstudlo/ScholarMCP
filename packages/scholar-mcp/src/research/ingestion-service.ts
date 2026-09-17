@@ -43,6 +43,32 @@ interface ParseOutput {
 
 const DOI_REGEX = /10\.\d{4,9}\/[\-._;()/:A-Z0-9]+/i;
 const PDF_LINK_REGEX = /href=["']([^"']+\.pdf(?:\?[^"']*)?)["']/i;
+const MAX_PDF_BYTES = 50 * 1024 * 1024;
+const MAX_LANDING_PAGE_BYTES = 2 * 1024 * 1024;
+
+const readLimitedBody = async (response: Response, maxBytes: number): Promise<Buffer> => {
+  if (Number(response.headers.get('content-length')) > maxBytes) {
+    await response.body?.cancel();
+    throw new IngestionError(`Response exceeds the ${maxBytes} byte limit.`);
+  }
+  const reader = response.body?.getReader();
+  if (!reader) return Buffer.alloc(0);
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > maxBytes) throw new IngestionError(`Response exceeds the ${maxBytes} byte limit.`);
+      chunks.push(value);
+    }
+    return Buffer.concat(chunks, length);
+  } finally {
+    await reader.cancel().catch(() => undefined);
+    reader.releaseLock();
+  }
+};
 
 const toAbsolutePath = (value: string): string => (value.startsWith('/') ? value : resolve(process.cwd(), value));
 
@@ -345,14 +371,14 @@ export class IngestionService {
     }
 
     const paperUrlCandidate = input.paperUrl ?? resolvedWork?.url ?? null;
-    const paperUrlPdfCandidate = paperUrlCandidate?.toLowerCase().endsWith('.pdf') ? paperUrlCandidate : null;
-    const discoveredPdfFromLanding = await this.resolvePdfUrlFromLandingPages([paperUrlCandidate, resolvedWork?.url]);
+    const paperUrlPdfCandidate = paperUrlCandidate && new URL(paperUrlCandidate).pathname.toLowerCase().endsWith('.pdf')
+      ? paperUrlCandidate : null;
 
     const resolvedPdfUrl =
       input.pdfUrl ??
       resolvedWork?.openAccess.pdfUrl ??
       paperUrlPdfCandidate ??
-      discoveredPdfFromLanding;
+      await this.resolvePdfUrlFromLandingPages([paperUrlCandidate, resolvedWork?.url]);
 
     if (!resolvedPdfUrl) {
       throw new IngestionError('Unable to resolve a downloadable PDF URL from input.');
@@ -417,6 +443,10 @@ export class IngestionService {
 
   private async obtainPdfFile(source: ResolvedIngestionSource): Promise<{ filePath: string; cleanup: () => Promise<void> }> {
     if (source.localPdfPath) {
+      const stat = await fs.stat(source.localPdfPath);
+      if (!stat.isFile() || stat.size > MAX_PDF_BYTES) {
+        throw new IngestionError('Local PDF must be a regular file no larger than 50 MiB.');
+      }
       return {
         filePath: source.localPdfPath,
         cleanup: async () => undefined
@@ -428,6 +458,7 @@ export class IngestionService {
     }
 
     const response = await fetch(source.pdfUrl, {
+      signal: AbortSignal.timeout(this.config.researchTimeoutMs),
       headers: {
         accept: 'application/pdf,*/*',
         'user-agent': 'ScholarMCP/1.0 (+https://github.com/lstudlo/ScholarMCP)'
@@ -438,11 +469,10 @@ export class IngestionService {
       throw new IngestionError(`Failed to download PDF. HTTP ${response.status}`);
     }
 
-    const bytes = await response.arrayBuffer();
     const contentType = (response.headers.get('content-type') ?? '').toLowerCase();
-    const buffer = Buffer.from(bytes);
+    const buffer = await readLimitedBody(response, MAX_PDF_BYTES);
     const looksLikePdf = buffer.length >= 4 && buffer.subarray(0, 4).toString('utf8') === '%PDF';
-    if (!contentType.includes('application/pdf') && !looksLikePdf) {
+    if (!looksLikePdf) {
       throw new IngestionError(
         `Downloaded content is not a PDF (content-type: ${contentType || 'unknown'}).`
       );
@@ -462,8 +492,13 @@ export class IngestionService {
   private async parseWithSimplePdf(filePath: string): Promise<ParseOutput> {
     const buffer = await fs.readFile(filePath);
     const parser = new PDFParse({ data: buffer });
-    const parsed = await parser.getText();
-    await parser.destroy();
+    const parsed = await (async () => {
+      try {
+        return await parser.getText();
+      } finally {
+        await parser.destroy();
+      }
+    })();
     const text = normalizeWhitespace(parsed.text ?? '');
 
     if (!text) {
@@ -500,6 +535,7 @@ export class IngestionService {
 
     const response = await fetch(url, {
       method: 'POST',
+      signal: AbortSignal.timeout(this.config.researchTimeoutMs),
       body: formData
     });
 
@@ -507,7 +543,7 @@ export class IngestionService {
       throw new IngestionError(`GROBID returned HTTP ${response.status}`);
     }
 
-    const xml = await response.text();
+    const xml = (await readLimitedBody(response, MAX_PDF_BYTES)).toString('utf8');
     const parsed = parseGrobidXml(xml);
     if (!parsed.fullText) {
       throw new IngestionError('GROBID response did not include extractable body text.');
@@ -547,6 +583,7 @@ export class IngestionService {
 
   private async resolvePdfUrlFromLandingPage(paperUrl: string): Promise<string | null> {
     const response = await fetch(paperUrl, {
+      signal: AbortSignal.timeout(this.config.researchTimeoutMs),
       headers: {
         accept: 'text/html,application/pdf,*/*',
         'user-agent': 'ScholarMCP/1.0 (+https://github.com/lstudlo/ScholarMCP)'
@@ -560,10 +597,11 @@ export class IngestionService {
     const finalUrl = response.url || paperUrl;
     const contentType = (response.headers.get('content-type') ?? '').toLowerCase();
     if (contentType.includes('application/pdf')) {
+      await response.body?.cancel();
       return finalUrl;
     }
 
-    const html = await response.text();
+    const html = (await readLimitedBody(response, MAX_LANDING_PAGE_BYTES)).toString('utf8');
     if (!html) {
       return null;
     }

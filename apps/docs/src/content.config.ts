@@ -1,4 +1,5 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
+import { z } from 'astro/zod';
 import { glob } from 'astro/loaders';
 
 const heroActionSchema = z.object({
@@ -20,10 +21,9 @@ const docsSchema = z.object({
     })
     .optional(),
   sidebar: z
-    .object({
+    .looseObject({
       order: z.number().optional()
     })
-    .passthrough()
     .optional(),
   draft: z.boolean().optional()
 });
@@ -31,7 +31,7 @@ const docsSchema = z.object({
 export const collections = {
   docs: defineCollection({
     loader: glob({
-      pattern: '**/*.{md,mdx}',
+      pattern: '**/*.md',
       base: './src/content/docs'
     }),
     schema: docsSchema

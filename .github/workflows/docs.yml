@@ -7,6 +7,7 @@ on:
       - 'packages/scholar-mcp/src/**'
       - 'packages/scholar-mcp/package.json'
       - 'scripts/generate-docs-*.mjs'
+      - '.github/workflows/docs.yml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -17,6 +18,7 @@ on:
       - 'packages/scholar-mcp/src/**'
       - 'packages/scholar-mcp/package.json'
       - 'scripts/generate-docs-*.mjs'
+      - '.github/workflows/docs.yml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -27,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -37,9 +39,9 @@ jobs:
           version: 10
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22.12.0
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
@@ -48,8 +50,14 @@ jobs:
       - name: Build docs
         run: pnpm docs:build
 
+      - name: Test documentation generation
+        run: node --test scripts/generate-docs-*.test.mjs
+
+      - name: Test documentation search
+        run: pnpm --filter scholar-mcp-docs test
+
       - name: Verify generated docs are committed
         run: |
           git diff --exit-code -- \
-            apps/docs/src/content/docs/reference/mcp-tools.mdx \
-            apps/docs/src/content/docs/releases/index.mdx
+            apps/docs/src/content/docs/reference/mcp-tools.md \
+            apps/docs/src/content/docs/releases/index.md

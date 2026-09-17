@@ -81,6 +81,22 @@ describe('extraction-service', () => {
   });
 });
 
+describe('citation validation regressions', () => {
+  it('requires the cited year to match, rather than only the author name', async () => {
+    const service = new CitationService({} as never);
+    const { references } = await service.buildReferenceList({ style: 'apa', works: [{
+      title: 'Earlier work', year: 2020, authors: [{ name: 'Jane Smith' }], doi: '10.1000/earlier',
+      paperId: 'earlier', abstract: null, venue: 'Journal', url: null, citationCount: 0,
+      influentialCitationCount: 0, referenceCount: 0, fieldsOfStudy: [], score: 0, provenance: [], externalIds: {},
+      openAccess: { isOpenAccess: false, pdfUrl: null, license: null }
+    }] });
+    const mismatch = service.validateManuscriptCitations('Prior work (Smith, 2024).', references);
+    expect(mismatch.missingReferences).toContain('(Smith, 2024)');
+    expect(mismatch.uncitedReferences).toHaveLength(1);
+    expect(service.validateManuscriptCitations('Prior work (Smith, 2020).', references).missingReferences).toEqual([]);
+  });
+});
+
 describe('citation-service', () => {
   it('suggests contextual citations and builds references from manuscript text', async () => {
     const service = new CitationService({

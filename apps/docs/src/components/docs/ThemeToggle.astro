@@ -8,40 +8,4 @@
   <span data-theme-toggle-label>Theme</span>
 </button>
 
-<script is:inline>
-  (() => {
-    const STORAGE_KEY = 'scholarmcp-theme';
-
-    const getResolvedTheme = () => {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'light' || saved === 'dark') return saved;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    };
-
-    const applyTheme = (theme) => {
-      document.documentElement.classList.toggle('dark', theme === 'dark');
-      document.documentElement.dataset.theme = theme;
-      const label = document.querySelector('[data-theme-toggle-label]');
-      if (label) label.textContent = theme === 'dark' ? 'Dark' : 'Light';
-    };
-
-    const bind = () => {
-      const button = document.querySelector('[data-theme-toggle]');
-      if (!button || button.dataset.bound === 'true') return;
-      button.dataset.bound = 'true';
-      applyTheme(getResolvedTheme());
-      button.addEventListener('click', () => {
-        const nextTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-        localStorage.setItem(STORAGE_KEY, nextTheme);
-        applyTheme(nextTheme);
-      });
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bind, { once: true });
-    } else {
-      bind();
-    }
-    document.addEventListener('astro:page-load', bind);
-  })();
-</script>
+<script src="../../scripts/theme.ts"></script>
