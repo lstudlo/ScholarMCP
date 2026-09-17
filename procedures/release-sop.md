@@ -13,6 +13,9 @@
    merged pull requests, explicitly `@mention` each contributor in GitHub
    release notes, and link their PRs with a short description of their work.
    Keep the website's release notes aligned, using profile links for handles.
+   Use a warm community voice, direct thank-yous, and a few cheerful emojis.
+   Explain what users gain from the release before listing implementation
+   details. Keep upgrade instructions, validation, and limitations accurate.
 
 4. Cut release:
    `pnpm release` (patch)
