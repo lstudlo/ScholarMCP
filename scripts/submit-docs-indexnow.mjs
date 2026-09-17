@@ -16,11 +16,19 @@ const deadline = Date.now() + 15 * 60 * 1000;
 // this exact revision is served at the canonical production hostname.
 for (let attempt = 0; Date.now() < deadline; attempt++) {
   try {
-    const response = await fetchPage(site);
+    // A fresh URL avoids a cached homepage response from an intermediate proxy
+    // or edge while a deployment is propagating across regions.
+    const probe = new URL(site);
+    probe.searchParams.set('deployment-check', `${expectedRevision}-${attempt}`);
+    const response = await fetchPage(probe);
     const html = await response.text();
     if (response.ok && html.includes(`name="scholarmcp-revision" content="${expectedRevision}"`)) {
       deployed = true;
       break;
+    }
+    if (attempt % 6 === 0) {
+      const servedRevision = html.match(/name="scholarmcp-revision" content="([^"]+)"/)?.[1] ?? 'missing';
+      console.log(`Production returned HTTP ${response.status}; revision ${servedRevision}; expected ${expectedRevision}.`);
     }
   } catch (error) {
     console.log(`Deployment check: ${error.message}`);
