@@ -9,17 +9,22 @@
 2. Run preflight:
    `pnpm release:check`
 
-3. Cut release:
+3. Prepare release notes with contributor credits first. Verify authors against
+   merged pull requests, explicitly `@mention` each contributor in GitHub
+   release notes, and link their PRs with a short description of their work.
+   Keep the website's release notes aligned, using profile links for handles.
+
+4. Cut release:
    `pnpm release` (patch)
    or `pnpm release minor` / `pnpm release major`
 
-4. Wait for GitHub Actions to finish:
+5. Wait for GitHub Actions to finish:
    - `docs`
    - `Publish to npm`
    - `test`
    - `Publish to GitHub Packages`
 
-5. Verify:
+6. Verify:
    `npm view scholar-mcp version --registry https://registry.npmjs.org`
    The GitHub Packages workflow also verifies the exact scoped package version
    against `https://npm.pkg.github.com` using its `GITHUB_TOKEN`.
