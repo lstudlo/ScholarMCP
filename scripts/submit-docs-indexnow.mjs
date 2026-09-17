@@ -9,7 +9,26 @@ const expectedRevision = process.env.EXPECTED_DOCS_REVISION;
 assert.match(key, /^[a-f0-9]{32}$/);
 assert.match(expectedRevision ?? '', /^[a-f0-9]{40}$/, 'EXPECTED_DOCS_REVISION must identify the deployed commit');
 
-const fetchPage = (url) => fetch(url, { signal: AbortSignal.timeout(20000), headers: { 'Cache-Control': 'no-cache' } });
+const pagesOrigin = 'https://scholar-mcp-docs.pages.dev';
+let readOrigin = site.origin;
+const fetchPage = async (url) => {
+  const canonical = new URL(url);
+  assert.equal(canonical.origin, site.origin, 'Only read this site\'s deployment assets');
+  const request = () => fetch(new URL(canonical.pathname + canonical.search, readOrigin), {
+    signal: AbortSignal.timeout(20000), headers: { 'Cache-Control': 'no-cache' }
+  });
+  let response = await request();
+  if (response.status === 403 && readOrigin === site.origin) {
+    // The custom domain's bot policy can reject GitHub-hosted runners while
+    // allowing verified search crawlers. Both hostnames serve this Pages project.
+    // Verify its production origin without weakening the domain's bot controls.
+    await response.body?.cancel();
+    readOrigin = pagesOrigin;
+    console.log(`The canonical host returned HTTP 403 to this runner; checking the production Pages origin ${pagesOrigin}.`);
+    response = await request();
+  }
+  return response;
+};
 let deployed = false;
 const deadline = Date.now() + 15 * 60 * 1000;
 // Cloudflare builds independently of Actions. Notify search engines only after

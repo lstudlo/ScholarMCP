@@ -36,6 +36,10 @@ sitemap coverage, homepage content, links, fragments, and assets.
   then submits canonical sitemap URLs to IndexNow. It does not run for PRs.
   A 200 or 202 confirms receipt, not indexing. If deployment or submission fails,
   inspect the workflow log and rerun the job after fixing the reported problem.
+  If the custom domain returns HTTP 403 to a GitHub-hosted runner, the workflow
+  verifies the same deployment through `scholar-mcp-docs.pages.dev`. Submissions
+  still contain only canonical custom-domain URLs, and search engines verify
+  the ownership key on that custom domain. The domain's bot controls stay intact.
 
 Google Search Console and Bing Webmaster Tools use the canonical HTTPS URL-prefix
 property. Submit `https://scholar-mcp.lstudlo.com/sitemap-index.xml` in each console.
