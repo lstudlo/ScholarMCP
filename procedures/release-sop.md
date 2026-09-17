@@ -37,6 +37,10 @@
   version, then verifies that generating docs after tagging leaves Git clean.
 - A GitHub release alone does not prove publication. Both publish jobs and their
   registry verification steps must succeed.
+- npm can accept a release while it is still processing. Verification retries
+  this delay. If processing exceeds the retry window, rerun verification only
+  with `gh workflow run publish.yml --ref <release-tag>`; this dispatch never
+  publishes. The selected ref must contain the dispatch-enabled workflow.
 
 ## Commands To Use
 
@@ -47,4 +51,4 @@
 
 1. Do not run `npm version` manually.
 2. Do not create release tags manually.
-3. If a release already created tag/release but publish failed, fix CI and cut a new patch release (`pnpm release`) instead of reusing the same tag/version.
+3. If publishing itself failed after creating a tag/release, fix CI and cut a new patch release (`pnpm release`) instead of reusing the same tag/version. If npm accepted the package and only the availability check failed, verify the existing version without republishing it.

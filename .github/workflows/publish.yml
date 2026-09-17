@@ -3,6 +3,8 @@ name: Publish to npm
 on:
   release:
     types: [published]
+  # Recheck an accepted release after registry processing without republishing it.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -39,6 +41,7 @@ jobs:
         run: pnpm --filter scholar-mcp release:check
 
       - name: Verify version matches release tag
+        if: github.event_name == 'release'
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG#v}"
@@ -50,6 +53,7 @@ jobs:
           echo "Version verified: $VERSION"
 
       - name: Publish to npm with provenance
+        if: github.event_name == 'release'
         working-directory: packages/scholar-mcp
         run: npm publish --provenance --access public --registry https://registry.npmjs.org
 
@@ -57,8 +61,17 @@ jobs:
         working-directory: packages/scholar-mcp
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          PUBLISHED=$(npm view "scholar-mcp@$VERSION" version --registry https://registry.npmjs.org)
+          for ATTEMPT in $(seq 1 30); do
+            PUBLISHED=$(npm view "scholar-mcp@$VERSION" version --registry https://registry.npmjs.org --prefer-online 2>/dev/null || true)
+            if [ "$PUBLISHED" = "$VERSION" ]; then break; fi
+            echo "Waiting for npm to finish processing $VERSION (attempt $ATTEMPT/30)"
+            sleep 10
+          done
           test "$PUBLISHED" = "$VERSION"
           cd "$(mktemp -d)"
-          INSTALLED=$(npm exec --yes --package="scholar-mcp@$VERSION" -- scholar-mcp --version)
+          for ATTEMPT in $(seq 1 6); do
+            INSTALLED=$(npm exec --yes --prefer-online --package="scholar-mcp@$VERSION" -- scholar-mcp --version) && break
+            echo "Waiting for npm package download (attempt $ATTEMPT/6)"
+            sleep 10
+          done
           test "$INSTALLED" = "$VERSION"
