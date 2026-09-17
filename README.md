@@ -7,8 +7,9 @@
 [![latest commit](https://img.shields.io/github/last-commit/lstudlo/ScholarMCP)](https://github.com/lstudlo/ScholarMCP/commits/main)
 [![license](https://img.shields.io/github/license/lstudlo/ScholarMCP)](https://github.com/lstudlo/ScholarMCP/blob/main/LICENSE)
 
-ScholarMCP is an MCP server for literature research workflows in coding agents.
-Official documentation: https://scholar-mcp.lstudlo.com/
+ScholarMCP is an open-source MCP server for academic research. Search Google Scholar, OpenAlex, Crossref, and Semantic Scholar, parse accessible PDFs, and prepare references in your coding agent.
+
+[ScholarMCP website and documentation](https://scholar-mcp.lstudlo.com/) · [Installation](https://scholar-mcp.lstudlo.com/getting-started/quick-start/) · [Academic paper search guide](https://scholar-mcp.lstudlo.com/guides/academic-paper-search/)
 
 ### Early Development Notice
 

@@ -7,6 +7,7 @@ on:
       - 'packages/scholar-mcp/src/**'
       - 'packages/scholar-mcp/package.json'
       - 'scripts/generate-docs-*.mjs'
+      - 'scripts/submit-docs-indexnow.mjs'
       - '.github/workflows/docs.yml'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -18,10 +19,18 @@ on:
       - 'packages/scholar-mcp/src/**'
       - 'packages/scholar-mcp/package.json'
       - 'scripts/generate-docs-*.mjs'
+      - 'scripts/submit-docs-indexnow.mjs'
       - '.github/workflows/docs.yml'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   docs:
@@ -53,7 +62,7 @@ jobs:
       - name: Test documentation generation
         run: node --test scripts/generate-docs-*.test.mjs
 
-      - name: Test documentation search
+      - name: Test documentation search and SEO output
         run: pnpm --filter scholar-mcp-docs test
 
       - name: Verify generated docs are committed
@@ -61,3 +70,10 @@ jobs:
           git diff --exit-code -- \
             apps/docs/src/content/docs/reference/mcp-tools.md \
             apps/docs/src/content/docs/releases/index.md
+
+      - name: Notify IndexNow after the production deployment
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        timeout-minutes: 20
+        env:
+          EXPECTED_DOCS_REVISION: ${{ github.sha }}
+        run: node scripts/submit-docs-indexnow.mjs

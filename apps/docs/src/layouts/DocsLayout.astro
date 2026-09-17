@@ -1,12 +1,19 @@
 ---
 import '../styles/site.css';
+import { pageGraph, productDescription, siteName, type Breadcrumb } from '../lib/seo';
 interface Props {
   title: string;
   description?: string;
+  breadcrumbs?: Breadcrumb[];
+  noindex?: boolean;
 }
 
-const { title, description } = Astro.props as Props;
+const { title, description = productDescription, breadcrumbs = [], noindex = false } = Astro.props as Props;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+const site = Astro.site ?? new URL('/', Astro.url);
+const socialImage = new URL('/scholarmcp_banner.png', site);
+const structuredData = pageGraph(site, canonicalUrl, title, description, breadcrumbs);
+const revision = process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA;
 ---
 
 <!doctype html>
@@ -17,7 +24,31 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
     <link rel="icon" href="/favicon.png" />
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
-    <link rel="canonical" href={canonicalUrl} />
+    {revision && <meta name="scholarmcp-revision" content={revision} />}
+    <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
+    {!noindex && <link rel="canonical" href={canonicalUrl} />}
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:type" content={canonicalUrl.pathname === '/' ? 'website' : 'article'} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="360" />
+    <meta property="og:image:alt" content="ScholarMCP, an MCP server for academic research" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    <meta name="twitter:image:alt" content="ScholarMCP, an MCP server for academic research" />
+    {canonicalUrl.pathname === '/' && <meta name="google-site-verification" content="Sz7jldHFsxa7ypsVv7Z9KtEUOoXsuOtp-pOyUnxxVes" />}
+    {canonicalUrl.pathname === '/' && <meta name="msvalidate.01" content="9C5D5615B2FA8EC79E8307F7E1064148" />}
+    {!noindex && <script type="application/ld+json" set:html={JSON.stringify(structuredData).replace(/</g, '\\u003c')} />}
     <title>{title}</title>
     <script is:inline>
       (() => {

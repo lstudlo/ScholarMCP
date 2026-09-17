@@ -11,6 +11,7 @@ const heroActionSchema = z.object({
 
 const docsSchema = z.object({
   title: z.string(),
+  seoTitle: z.string().optional(),
   description: z.string().optional(),
   template: z.enum(['splash']).optional(),
   hero: z

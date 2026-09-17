@@ -1,0 +1,16 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import SiteShell from '../components/docs/SiteShell.astro';
+---
+<DocsLayout title="Page not found | ScholarMCP" description="This page does not exist. Find ScholarMCP installation guides, research workflows, and tool documentation." noindex>
+  <SiteShell sidebar={[]} toc={[]} isHome>
+    <section class="mx-auto max-w-3xl py-16">
+      <h1 class="font-serif text-5xl">Page not found</h1>
+      <p class="mt-5 leading-7">The address may be incorrect, or the page may have moved.</p>
+      <div class="mt-8 flex flex-wrap gap-6">
+        <a class="text-[var(--accent)] underline" href="/">ScholarMCP home</a>
+        <a class="text-[var(--accent)] underline" href="/getting-started/quick-start/">Installation guide</a>
+      </div>
+    </section>
+  </SiteShell>
+</DocsLayout>

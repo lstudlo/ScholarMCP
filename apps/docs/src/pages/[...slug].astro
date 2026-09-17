@@ -23,7 +23,7 @@ if (!context) {
 
 const { page, sidebar, prev, next } = context;
 const { Content, headings } = await renderDocEntry(page.entry);
-const title = page.id === 'index' ? `${page.label} | ScholarMCP` : `${page.label} | ScholarMCP Docs`;
+const title = page.entry.data.seoTitle ?? (page.id === 'index' ? `${page.label} | ScholarMCP` : `${page.label} | ScholarMCP Docs`);
 const description = page.entry.data.description ?? 'ScholarMCP documentation';
 const isHome = page.id === 'index' || page.entry.data.template === 'splash';
 const crumbs = breadcrumbParts(page, context.pages);
@@ -63,19 +63,18 @@ const homeSectionCards = isHome
   : [];
 ---
 
-<DocsLayout title={title} description={description}>
+<DocsLayout title={title} description={description} breadcrumbs={isHome ? [] : [{ label: 'ScholarMCP', href: '/' }, ...crumbs]}>
   <SiteShell sidebar={sidebar} toc={toc} prev={prev} next={next} isHome={isHome}>
     {
       isHome ? (
-        <div class="space-y-10">
+        <div class="mx-auto max-w-6xl space-y-12">
           <section>
-            <article class="mx-auto rounded-4xl border border-zinc-200/80 bg-white/75 p-6 shadow-xl backdrop-blur sm:p-8 dark:border-zinc-800 dark:bg-zinc-950/70">
-              <p class="text-[11px] tracking-[0.18em] text-zinc-500 uppercase">ScholarMCP Docs</p>
-              <h1 class="mt-3 max-w-3xl font-serif text-4xl leading-tight tracking-tight sm:text-5xl">
+            <article class="py-6 sm:py-10">
+              <h1 class="max-w-4xl font-serif text-4xl leading-tight tracking-tight text-balance sm:text-6xl">
                 {page.entry.data.hero?.title ?? page.entry.data.title}
               </h1>
               {page.entry.data.hero?.tagline && (
-                <p class="mt-4 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                <p class="mt-5 max-w-3xl text-base leading-7 text-zinc-600 dark:text-zinc-300 sm:text-lg">
                   {page.entry.data.hero.tagline}
                 </p>
               )}
@@ -100,10 +99,13 @@ const homeSectionCards = isHome
             </article>
           </section>
 
+          <article class="prose-wrap max-w-[75ch]">
+            <Content />
+          </article>
+
           <section id="docs-index">
             <div class="mb-4 flex items-end justify-between gap-4 px-1">
               <div>
-                <p class="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">All Docs</p>
                 <h2 class="mt-1 font-serif text-2xl tracking-tight sm:text-3xl">
                   Browse documentation by section
                 </h2>
@@ -170,8 +172,8 @@ const homeSectionCards = isHome
       ) : (
         <div class="space-y-5">
           <div class="rounded-3xl border border-zinc-200/80 bg-white/75 p-5 backdrop-blur sm:p-6 dark:border-zinc-800 dark:bg-zinc-950/70">
-            <nav class="text-xs text-zinc-500">
-              <a href="/" class="hover:text-zinc-900 hover:underline dark:hover:text-zinc-100">Docs</a>
+            <nav class="text-xs text-zinc-500" aria-label="Breadcrumb">
+              <a href="/" class="hover:text-zinc-900 hover:underline dark:hover:text-zinc-100">ScholarMCP</a>
               {crumbs.map((crumb) => (
                 <>
                   <span class="mx-2">/</span>

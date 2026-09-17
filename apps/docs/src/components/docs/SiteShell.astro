@@ -22,6 +22,7 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
 ---
 
 <div class="relative min-h-screen">
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-white focus:px-4 focus:py-3 focus:text-black">Skip to content</a>
   <div class="pointer-events-none absolute inset-0 opacity-70 dark:opacity-40">
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(0,0,0,0.06),transparent_45%),radial-gradient(circle_at_80%_100%,rgba(0,0,0,0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.09),transparent_45%),radial-gradient(circle_at_80%_100%,rgba(255,255,255,0.06),transparent_50%)]"></div>
     <div class="absolute inset-0 [background-image:linear-gradient(to_right,rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.045)_1px,transparent_1px)] [background-size:14px_14px] dark:[background-image:linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)]"></div>
@@ -31,9 +32,9 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
     <div class="mx-auto flex w-full items-center justify-between gap-2 px-4 h-16 sm:gap-4 sm:px-7 md:px-9">
       <a href="/" class="group min-w-0 no-underline">
         <div class="flex items-center gap-2 sm:gap-3 group-hover:opacity-80">
-          <div class="font-serif text-xl leading-none tracking-tight sm:text-2xl">ScholarMCP</div>
-          <span class="text-[10px] tracking-[0.14em] text-[var(--accent)] sm:text-[11px]">by</span>
-          <img src="/lstudlo_logo.svg" alt="lstudlo" class="h-3.5 shrink-0 dark:invert" />
+          <div class="font-serif text-lg leading-none tracking-tight sm:text-2xl">ScholarMCP</div>
+          <span class="hidden text-[11px] tracking-[0.14em] text-[var(--accent)] sm:inline">by</span>
+          <img src="/lstudlo_logo.svg" alt="lstudlo" class="hidden h-3 shrink-0 min-[360px]:block sm:h-3.5 dark:invert" />
         </div>
       </a>
 
@@ -59,7 +60,7 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
     </div>
   </header>
 
-  <main class="relative z-10 mx-auto w-full px-6 py-8 md:px-8">
+  <main id="main-content" class="relative z-10 mx-auto w-full px-6 py-8 md:px-8">
     {!isHome && (
       <details class="mb-4 rounded-2xl border border-zinc-200/80 bg-white/75 p-4 dark:border-zinc-800 dark:bg-zinc-950/70 xl:hidden">
         <summary class="cursor-pointer text-sm font-medium">Documentation menu</summary>
@@ -111,6 +112,16 @@ const { sidebar, toc, prev, next, isHome = false } = Astro.props as Props;
       )}
     </div>
   </main>
+
+  <footer class="relative z-10 mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5 border-t border-zinc-200 px-6 py-8 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-300">
+    <p>ScholarMCP by lstudlo. Open source under the MIT license.</p>
+    <nav aria-label="Project links" class="flex flex-wrap gap-5">
+      <a href="https://github.com/lstudlo/ScholarMCP" class="hover:underline">GitHub</a>
+      <a href="https://www.npmjs.com/package/scholar-mcp" class="hover:underline">npm</a>
+      <a href="/releases/" class="hover:underline">Releases</a>
+      <a href="/llms.txt" class="hover:underline">AI documentation index</a>
+    </nav>
+  </footer>
 
   <dialog
     id="docs-search-modal"
