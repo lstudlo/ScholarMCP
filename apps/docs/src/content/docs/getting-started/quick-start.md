@@ -20,10 +20,12 @@ npm install -g scholar-mcp
 
 To update an existing installation to the 1.2 release:
 
+<!--email_off-->
 ```bash
 npm install -g scholar-mcp@1.2.0
 scholar-mcp --version
 ```
+<!--/email_off-->
 
 The expected version is `1.2.0`. Restart your MCP client after upgrading so it
 loads the new server process.
@@ -33,12 +35,14 @@ loads the new server process.
 The same release is available as `@lstudlo/scholar-mcp`. Configure the scope and
 authenticate to GitHub Packages with a token that has `read:packages`:
 
+<!--email_off-->
 ```bash
 npm config set @lstudlo:registry https://npm.pkg.github.com
 npm login --scope=@lstudlo --registry=https://npm.pkg.github.com --auth-type=legacy
 npm install -g @lstudlo/scholar-mcp@1.2.0
 scholar-mcp --version
 ```
+<!--/email_off-->
 
 Both packages provide the `scholar-mcp` command. Install one distribution at a time.
 
