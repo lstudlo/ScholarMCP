@@ -58,6 +58,51 @@ const toToolError = (error: unknown): CallToolResult => {
   };
 };
 
+// Strips sentence punctuation that follows an identifier in running text. A
+// closing parenthesis is kept when it closes one opened inside the identifier
+// (DOI suffixes and URLs may contain parentheses, e.g. 10.1234/series(2020)).
+const trimTrailingPunctuation = (value: string): string => {
+  let trimmed = value.replace(/[.,;:\]]+$/, '');
+  while (trimmed.endsWith(')') && (trimmed.match(/\)/g)?.length ?? 0) > (trimmed.match(/\(/g)?.length ?? 0)) {
+    trimmed = trimmed.slice(0, -1).replace(/[.,;:\]]+$/, '');
+  }
+  return trimmed;
+};
+
+const findBibtexField = (bibtex: string | undefined, field: string): string | null => {
+  const match = bibtex?.match(new RegExp(`\\b${field}\\s*=\\s*[{"]([^}"]+)[}"]`, 'i'));
+  return match?.[1]?.trim() || null;
+};
+
+const isHttpUrl = (value: string): boolean => {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+const findReferenceDoi = (formatted: string, bibtex?: string): string | null => {
+  // A BibTeX field is delimited, so its value is taken as written.
+  const fromBibtex = findBibtexField(bibtex, 'doi');
+  if (fromBibtex) {
+    return fromBibtex;
+  }
+  const fromText = formatted.match(/\b10\.\d{4,9}\/[^\s"<>]+/i)?.[0];
+  return fromText ? trimTrailingPunctuation(fromText) : null;
+};
+
+const findReferenceUrl = (formatted: string, bibtex?: string): string | null => {
+  // Placeholders such as url={forthcoming} are not links; fall back to the formatted text.
+  const fromBibtex = findBibtexField(bibtex, 'url');
+  if (fromBibtex && isHttpUrl(fromBibtex)) {
+    return fromBibtex;
+  }
+  const fromText = formatted.match(/https?:\/\/[^\s"<>]+/i)?.[0];
+  return fromText ? trimTrailingPunctuation(fromText) : null;
+};
+
 const manualWorkSchema = z.object({
   title: z.string().min(1),
   abstract: z.string().optional(),
@@ -423,8 +468,8 @@ export const createScholarMcpServer = (
             abstract: null,
             year: null,
             venue: null,
-            doi: null,
-            url: null,
+            doi: findReferenceDoi(reference.formatted, reference.bibtex),
+            url: findReferenceUrl(reference.formatted, reference.bibtex),
             paperId: reference.id ?? `ref-${index + 1}`,
             citationCount: 0,
             influentialCitationCount: 0,
