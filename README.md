@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/lstudlo-scholarmcp-badge.png)](https://mseep.ai/app/lstudlo-scholarmcp)
+
 ![ScholarMCP banner](public/scholarmcp_banner.png)
 
 # ScholarMCP
